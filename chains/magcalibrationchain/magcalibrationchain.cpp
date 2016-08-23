@@ -35,7 +35,14 @@
 // magcalibrationchain requires: magnetometeradaptor, kbslideradaptor
 
 MagCalibrationChain::MagCalibrationChain(const QString& id) :
-    AbstractChain(id)
+    AbstractChain(id),
+    filterBin(NULL),
+    magAdaptor(NULL),
+    magReader(NULL),
+    magCalFilter(NULL),
+    magScaleFilter(NULL),
+    magCoordinateAlignFilter_(NULL),
+    calibratedMagnetometerData(NULL)
 {
     setMatrixFromString("1,0,0,\
                          0,1,0,\
@@ -43,7 +50,9 @@ MagCalibrationChain::MagCalibrationChain(const QString& id) :
     SensorManager& sm = SensorManager::instance();
 
     magAdaptor = sm.requestDeviceAdaptor("magnetometeradaptor");
-    setValid(magAdaptor->isValid());
+    // valid is false by default so no need to set it if magnetormeter adaptor is not there
+    if (magAdaptor)
+        setValid(magAdaptor->isValid());
 
 // Config::configuration()->value<int>("magnetometer/interval_compensation", 16);
     // Get the transformation matrix from config file
@@ -128,6 +137,11 @@ MagCalibrationChain::~MagCalibrationChain()
 
 bool MagCalibrationChain::start()
 {
+    if (!magAdaptor) {
+        sensordLogD() << "No magnetometer adaptor to start.";
+        return false;
+    }
+
     if (AbstractSensorChannel::start()) {
         sensordLogD() << "Starting MagCalibrationChain";
         filterBin->start();
@@ -138,6 +152,11 @@ bool MagCalibrationChain::start()
 
 bool MagCalibrationChain::stop()
 {
+    if (!magAdaptor) {
+        sensordLogD() << "No magnetometer adaptor to stop.";
+        return false;
+    }
+
     if (AbstractSensorChannel::stop()) {
         sensordLogD() << "Stopping MagCalibrationChain";
         magAdaptor->stopSensor();
@@ -150,7 +169,11 @@ void MagCalibrationChain::resetCalibration()
 {
    if (needsCalibration) {
        CalibrationFilter *filter = static_cast<CalibrationFilter *>(magCalFilter);
-    filter->dropCalibration();
+       if (!filter) {
+           sensordLogD() << "Can not reset calibration without filter.";
+           return;
+       }
+       filter->dropCalibration();
    }
 }
 
