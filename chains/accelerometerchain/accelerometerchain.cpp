@@ -45,8 +45,9 @@ AccelerometerChain::AccelerometerChain(const QString& id) :
     SensorManager& sm = SensorManager::instance();
 
     accelerometerAdaptor_ = sm.requestDeviceAdaptor("accelerometeradaptor");
-    Q_ASSERT( accelerometerAdaptor_ );
-    setValid(accelerometerAdaptor_->isValid());
+
+    if (accelerometerAdaptor_)
+        setValid(accelerometerAdaptor_->isValid());
 
     accelerometerReader_ = new BufferReader<AccelerationData>(1);
 
@@ -106,6 +107,11 @@ AccelerometerChain::~AccelerometerChain()
 
 bool AccelerometerChain::start()
 {
+    if (!accelerometerAdaptor_) {
+        sensordLogD() << "No accelerometer adaptor to start.";
+        return false;
+    }
+
     if (AbstractSensorChannel::start()) {
         sensordLogD() << "Starting AccelerometerChain";
         filterBin_->start();
@@ -116,6 +122,11 @@ bool AccelerometerChain::start()
 
 bool AccelerometerChain::stop()
 {
+    if (!accelerometerAdaptor_) {
+        sensordLogD() << "No accelerometer adaptor to stop.";
+        return false;
+    }
+
     if (AbstractSensorChannel::stop()) {
         sensordLogD() << "Stopping AccelerometerChain";
         accelerometerAdaptor_->stopSensor();

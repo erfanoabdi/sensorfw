@@ -262,7 +262,7 @@ DataRangeList NodeBase::parseDataRangeList(const QString& input, int defaultReso
 
 const QList<DataRange>& NodeBase::getAvailableIntervals() const
 {
-    if (!hasLocalInterval())
+    if (m_intervalSource && !hasLocalInterval())
     {
         return m_intervalSource->getAvailableIntervals();
     }
@@ -355,7 +355,8 @@ bool NodeBase::setIntervalRequest(const int sessionId, const unsigned int value)
 
 void NodeBase::addStandbyOverrideSource(NodeBase* node)
 {
-    m_standbySourceList.append(node);
+    if (node)
+        m_standbySourceList.append(node);
 }
 
 bool NodeBase::standbyOverride() const
@@ -514,6 +515,9 @@ void NodeBase::removeIntervalRequest(const int sessionId)
 
 bool NodeBase::connectToSource(NodeBase* source, const QString& bufferName, RingBufferReaderBase* reader)
 {
+    if (!source)
+       return false;
+
     RingBufferBase* rb = source->findBuffer(bufferName);
     if (rb == NULL)
     {
@@ -535,6 +539,9 @@ bool NodeBase::connectToSource(NodeBase* source, const QString& bufferName, Ring
 
 bool NodeBase::disconnectFromSource(NodeBase* source, const QString& bufferName, RingBufferReaderBase* reader)
 {
+    if (!source)
+        return false;
+
     RingBufferBase* rb = source->findBuffer(bufferName);
     if (rb == NULL)
     {
