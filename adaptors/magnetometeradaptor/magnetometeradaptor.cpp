@@ -93,7 +93,7 @@ bool MagnetometerAdaptor::setInterval(const unsigned int value, const int sessio
 {
     if(intervalCompensation_)
     {
-        return SysfsAdaptor::setInterval(value > intervalCompensation_ ? value - intervalCompensation_ : 0, sessionId);
+        return SysfsAdaptor::setInterval((signed)value >intervalCompensation_ ? value - intervalCompensation_ : 0, sessionId);
     }
     return SysfsAdaptor::setInterval(value, sessionId);
 }

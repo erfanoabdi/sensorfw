@@ -111,6 +111,7 @@ AdaptedSensorEntry* DeviceAdaptor::getAdaptedSensor() const
 
 RingBufferBase* DeviceAdaptor::findBuffer(const QString& name) const
 {
+    Q_UNUSED(name)
     AdaptedSensorEntry* entry = getAdaptedSensor();
     if ( !entry )
         return NULL;

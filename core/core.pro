@@ -2,7 +2,6 @@ QT += network
 
 TEMPLATE = lib
 TARGET = sensorfw
-
 include( ../common-config.pri )
 
 CONFIG += link_pkgconfig

@@ -47,31 +47,6 @@ power_state/frequency
     powerStatePath = Config::configuration()->value("accelerometer/mode_path").toByteArray();
     frequency = Config::configuration()->value("accelerometer/frequency_mode").toInt();
 
-
-    int interval;
-    switch(frequency) {
-    case 0:
-        interval = 0; //off
-    case 1:
-        interval = 1;
-        break;
-    case 2:
-        interval = 10;
-        break;
-    case 3:
-        interval = 25;
-        break;
-    case 4:
-        interval = 50;
-        break;
-    case 6:
-        interval = 200;
-        break;
-    case 7:
-        interval = 400;
-        break;
-    };
-
     setDescription("ste accelerometer");
 }
 
@@ -102,9 +77,9 @@ void SteAccelAdaptor::stopSensor()
 
 void SteAccelAdaptor::processSample(int pathId, int fd)
 {
+    Q_UNUSED(pathId);
     char buf[32];
     int x, y, z;
-    qlonglong ts;
 
 //    if (pathId != devId) {
 //        sensordLogW () << "Wrong pathId" << pathId;
@@ -122,7 +97,6 @@ void SteAccelAdaptor::processSample(int pathId, int fd)
     x = line.section(":",0,0).toInt();
     y = line.section(":",1,1).toInt();
     z = line.section(":",2,2).toInt();
-    ts = line.section(":",3,3).toLongLong();
 
     AccelerationData *d = buffer->nextSlot();
 
