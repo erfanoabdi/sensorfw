@@ -94,7 +94,6 @@ int main(int argc, char *argv[])
     previousMessageHandler = qInstallMessageHandler(messageOutput);
 
     QCoreApplication app(argc, argv);
-    SensorManager& sm = SensorManager::instance();
     Parser parser(app.arguments());
 
     if (parser.printHelp())
@@ -135,15 +134,6 @@ int main(int argc, char *argv[])
     signal(SIGUSR1, signalUSR1);
     signal(SIGUSR2, signalUSR2);
     signal(SIGINT, signalINT);
-
-#ifdef PROVIDE_CONTEXT_INFO
-    if (parser.contextInfo())
-    {
-        sensordLogD() << "Loading ContextSensor " << sm.loadPlugin("contextsensor");
-        sensordLogD() << "Loading ALSSensor " << sm.loadPlugin("alssensor");
-    }
-#endif
-
     
     if (parser.createDaemon())
     {
@@ -158,6 +148,16 @@ int main(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         }
     }
+
+    SensorManager& sm = SensorManager::instance();
+
+#ifdef PROVIDE_CONTEXT_INFO
+    if (parser.contextInfo())
+    {
+        sensordLogD() << "Loading ContextSensor " << sm.loadPlugin("contextsensor");
+        sensordLogD() << "Loading ALSSensor " << sm.loadPlugin("alssensor");
+    }
+#endif
 
     if (parser.magnetometerCalibration())
     {
