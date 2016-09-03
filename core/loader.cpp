@@ -54,7 +54,13 @@ bool Loader::loadPluginFile(const QString& name, QString *errorString, QStringLi
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
     QString pluginPath = QString::fromLatin1("/usr/lib/sensord/lib%1.so").arg(name);
 #else
-    QString pluginPath = QString::fromLatin1("/usr/lib/sensord-qt5/lib%1-qt5.so").arg(name);
+    QString pluginPath;
+    QByteArray env = qgetenv("SENSORFW_LIBRARY_PATH");
+    if (env.isEmpty())
+        pluginPath = QString::fromLatin1("/usr/lib/sensord-qt5/lib%1-qt5.so").arg(name);
+    else
+        pluginPath = QString::fromLatin1(env+"/usr/lib/sensord-qt5/lib%1-qt5.so").arg(name);
+
 #endif
 
     QPluginLoader qpl(pluginPath);

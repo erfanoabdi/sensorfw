@@ -108,7 +108,13 @@ SensorManager::SensorManager()
     pipeNotifier_(0),
     deviation(0)
 {
-    const char* SOCKET_NAME = "/var/run/sensord.sock";
+    QString pluginPath;
+    QByteArray env = qgetenv("SENSORFW_LIBRARY_PATH");
+    const char* SOCKET_NAME;
+    if (env.isEmpty())
+        SOCKET_NAME = "/var/run/sensord.sock";
+    else
+        SOCKET_NAME = env+"/var/run/sensord.sock";
 
     new SensorManagerAdaptor(this);
 
