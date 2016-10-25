@@ -67,6 +67,8 @@ SysfsAdaptor::~SysfsAdaptor()
 
 bool SysfsAdaptor::addPath(const QString& path, const int id)
 {
+    qDebug() << Q_FUNC_INFO << path;
+
     if (!QFile::exists(path)) {
         return false;
     }

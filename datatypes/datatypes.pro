@@ -23,14 +23,17 @@ HEADERS += xyz.h \
     posedata.h \
     tapdata.h \
     touchdata.h \
-    proximity.h
+    proximity.h \
+    lid.h \
+    liddata.h
 
 SOURCES += xyz.cpp \
     orientation.cpp \
     unsigned.cpp \
     compass.cpp \
     utils.cpp \
-    tap.cpp
+    tap.cpp \
+    lid.cpp
 
 include(../common-install.pri)
 publicheaders.path  = $${publicheaders.path}/datatypes

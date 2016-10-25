@@ -57,6 +57,7 @@ private slots:
     void testProximityAdaptor();
     void testTouchAdaptor();
     void testGyroscopeAdaptor();
+    void testLidSensorAdaptor();
 
 };
 
