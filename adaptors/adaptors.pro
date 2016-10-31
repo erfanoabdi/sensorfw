@@ -40,6 +40,7 @@ SUDBIRS += oemtabletgyroscopeadaptor
 SUBDIRS += steaccelerometeradaptor
 SUBDIRS += mpu6050accelerometer
 SUBDIRS += lidsensoradaptor-evdev
+SUBDIRS += iioadaptor
 
 config_hybris {
     SUBDIRS += hybrisaccelerometer
