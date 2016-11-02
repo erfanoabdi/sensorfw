@@ -1,6 +1,6 @@
 /**
-   @file temperatureplugin.cpp
-   @brief Plugin for TemperatureSensor
+   @file humidityadaptor.cpp
+   @brief Plugin for HumidityAdaptorPlugin
 
    <p>
    Copyright (C) 2016 Canonical LTD.
@@ -21,30 +21,20 @@
    You should have received a copy of the GNU Lesser General Public
    License along with Sensord.  If not, see <http://www.gnu.org/licenses/>.
    </p>
- */
+*/
 
-#include "temperatureplugin.h"
-#include "temperaturesensor.h"
+#include "humidityadaptorplugin.h"
+#include "humidityadaptor.h"
 #include "sensormanager.h"
 #include "logging.h"
 
-void TemperaturePlugin::Register(class Loader&)
+void HumidityAdaptorPlugin::Register(class Loader&)
 {
-    sensordLogD() << "registering temperaturesensor";
+    sensordLogD() << "registering humidityadaptor";
     SensorManager& sm = SensorManager::instance();
-    sm.registerSensor<TemperatureSensorChannel>("temperaturesensor");
-}
-
-void TemperaturePlugin::Init(class Loader& l)
-{
-    Q_UNUSED(l);
-    SensorManager::instance().requestSensor("temperaturesensor");
-}
-
-QStringList TemperaturePlugin::Dependencies() {
-    return QString("temperatureadaptor").split(":", QString::SkipEmptyParts);
+    sm.registerDeviceAdaptor<HumidityAdaptor>("humidityadaptor");
 }
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(temperaturesensor, TemperaturePlugin)
+Q_EXPORT_PLUGIN2(humidityadaptor, HumidityAdaptorPlugin)
 #endif

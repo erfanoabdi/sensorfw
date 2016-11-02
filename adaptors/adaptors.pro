@@ -41,6 +41,9 @@ SUBDIRS += steaccelerometeradaptor
 SUBDIRS += mpu6050accelerometer
 SUBDIRS += lidsensoradaptor-evdev
 SUBDIRS += iioadaptor
+SUBDIRS += humidityadaptor
+SUBDIRS += pressureadaptor
+SUBDIRS += temperatureadaptor
 
 config_hybris {
     SUBDIRS += hybrisaccelerometer
