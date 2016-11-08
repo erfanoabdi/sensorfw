@@ -28,7 +28,7 @@
 
 #include <QtDBus/QtDBus>
 
-#include "datatypes/unsigned.h"
+#include "datatypes/liddata.h"
 #include "abstractsensor_i.h"
 
 /**
@@ -38,7 +38,7 @@ class LidSensorChannelInterface : public AbstractSensorChannelInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(LidSensorChannelInterface)
-    Q_PROPERTY(Unsigned closed READ closed)
+    Q_PROPERTY(LidData closed READ closed)
 
 public:
     /**
@@ -60,7 +60,7 @@ public:
      *
      * @return lid reading.
      */
-    Unsigned closed();
+    LidData closed();
 
     /**
      * Constructor.
@@ -105,7 +105,7 @@ Q_SIGNALS:
      *
      * @param value ambient light reading.
      */
-    void LidChanged(const Unsigned& value);
+    void lidChanged(const LidData& value);
 };
 
 namespace local {

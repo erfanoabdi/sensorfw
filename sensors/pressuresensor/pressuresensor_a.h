@@ -1,6 +1,6 @@
 /**
-   @file alssensor_a.h
-   @brief D-Bus adaptor for ALSSensor
+   @file pressuresensor_a.h
+   @brief D-Bus adaptor for PressureSensor
 
    <p>
    Copyright (C) 2016 Canonical LTD.

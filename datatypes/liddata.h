@@ -62,4 +62,5 @@ public:
         TimedData(timestamp), type_(type), value_(0) {}
 };
 
+Q_DECLARE_METATYPE(LidData)
 #endif // LidData_H

@@ -1,6 +1,6 @@
 /**
-   @file alssensor_a.h
-   @brief D-Bus adaptor for ALSSensor
+   @file lidsensor_a.h
+   @brief D-Bus adaptor for LidSensor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.
@@ -36,7 +36,7 @@ class LidSensorChannelAdaptor : public AbstractSensorChannelAdaptor
 {
     Q_OBJECT
     Q_DISABLE_COPY(LidSensorChannelAdaptor)
-    Q_CLASSINFO("D-Bus Interface", "local.lidsensor")
+    Q_CLASSINFO("D-Bus Interface", "local.LidSensor")
     Q_PROPERTY(Unsigned closed READ closed)
 
 public:
@@ -46,7 +46,7 @@ public Q_SLOTS:
     Unsigned closed() const;
 
 Q_SIGNALS:
-    void LidChanged(bool value);
+    void lidChanged(bool value);
 };
 
 #endif

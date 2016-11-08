@@ -1,6 +1,6 @@
 /**
-   @file alssensor.cpp
-   @brief ALSSensor
+   @file pressuresensor.cpp
+   @brief PressureSensor
 
    <p>
    Copyright (C) 2016 Canonical LTD.

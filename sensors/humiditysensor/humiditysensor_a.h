@@ -1,5 +1,5 @@
 /**
-   @file alssensor_a.h
+   @file humiditysensor_a.h
    @brief D-Bus adaptor for ALSSensor
 
    <p>

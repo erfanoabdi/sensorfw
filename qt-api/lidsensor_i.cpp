@@ -1,6 +1,6 @@
 /**
-   @file alssensor_i.cpp
-   @brief Interface for ALSSensor
+   @file lidsensor_i.cpp
+   @brief Interface for LidSensor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.
@@ -62,15 +62,15 @@ LidSensorChannelInterface* LidSensorChannelInterface::interface(const QString& i
 
 bool LidSensorChannelInterface::dataReceivedImpl()
 {
-    QVector<TimedUnsigned> values;
-    if (!read<TimedUnsigned>(values))
+    QVector<LidData> values;
+    if (!read<LidData>(values))
         return false;
-    foreach(const TimedUnsigned& data, values)
-        emit LidChanged(data);
+    foreach(const LidData &data, values)
+        emit lidChanged(data);
     return true;
 }
 
-Unsigned LidSensorChannelInterface::closed()
+LidData LidSensorChannelInterface::closed()
 {
-    return getAccessor<Unsigned>("closed");
+    return getAccessor<LidData>("closed");
 }

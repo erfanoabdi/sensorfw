@@ -1,6 +1,6 @@
 /**
-   @file alssensor_a.cpp
-   @brief D-Bus adaptor for ALSSensor
+   @file lidsensor_a.cpp
+   @brief D-Bus adaptor for LidSensor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.
