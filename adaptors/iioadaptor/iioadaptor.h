@@ -30,28 +30,11 @@
 #include <sysfsadaptor.h>
 #include <datatypes/orientationdata.h>
 
-#define IIO_SYSFS_BASE              "/sys/bus/iio/devices/"
-
-
-#define IIO_ACCELEROMETER_ENABLE    "buffer/enable"
-#define IIO_GYROSCOPE_ENABLE        "buffer/enable"
-// FIXME: no enable for magn?
-#define IIO_MAGNETOMETER_ENABLE     "compass_cali_test"
-
-// FIXME: shouldn't assume any number of devices
-#define IIO_MAX_DEVICES             3
-
 // FIXME: shouldn't assume any number of channels per device
 #define IIO_MAX_DEVICE_CHANNELS     20
 
 // FIXME: no idea what would be reasonable length
 #define IIO_BUFFER_LEN              256
-
-struct iio_device {
-  QString name;
-  int channels;
-  int channel_bytes[IIO_MAX_DEVICE_CHANNELS];
-};
 
 /**
  * @brief Adaptor for Industrial I/O.
@@ -73,6 +56,18 @@ class IioAdaptor : public SysfsAdaptor
         IIO_ROTATION, // dev_rotation, quaternion
         IIO_ALS, // als
         IIO_TILT // incli_3d
+    };
+
+    struct iio_device {
+      QString name;
+      int channels;
+      int channel_bytes[IIO_MAX_DEVICE_CHANNELS];
+      qreal scale;
+      qreal offset;
+      int frequency;
+      QString devicePath;
+      int index;
+      IioSensorType sensorType;
     };
 
 public:
@@ -99,7 +94,7 @@ protected:
      *
      * @param id Identifier for the adaptor.
      */
-    IioAdaptor(const QString &id/*, int type*/);
+    IioAdaptor(const QString &id);
 
     /**
      * Destructor.
@@ -108,7 +103,7 @@ protected:
 
 
     bool setInterval(const unsigned int value, const int sessionId);
-  //  unsigned int interval() const;
+    //  unsigned int interval() const;
 
 private:
 
@@ -122,32 +117,25 @@ private:
      */
     void processSample(int pathId, int fd);
 
-    int sensorExists(IioAdaptor::IioSensorType sensor);
     int findSensor(const QString &name);
-	bool deviceEnable(int device, int enable);
+    bool deviceEnable(int device, int enable);
 
-    QString deviceGetName(int device);
-	bool sysfsWriteInt(QString filename, int val);
-	QString sysfsReadString(QString filename);
-	int sysfsReadInt(QString filename);
-	int scanElementsEnable(int device, int enable);
-	int deviceChannelParseBytes(QString filename);
+    bool sysfsWriteInt(QString filename, int val);
+    QString sysfsReadString(QString filename);
+    int sysfsReadInt(QString filename);
+    int scanElementsEnable(int device, int enable);
+    int deviceChannelParseBytes(QString filename);
 
-	// Device number for the sensor (-1 if not found)
-    int dev_accl_;
+    // Device number for the sensor (-1 if not found)
+    int devNodeNumber;
 
     DeviceAdaptorRingBuffer<TimedXyzData>* iioXyzBuffer_;
     DeviceAdaptorRingBuffer<TimedUnsigned>* alsBuffer_;
     DeviceAdaptorRingBuffer<CalibratedMagneticFieldData>* magnetometerBuffer_;
 
-	struct iio_device devices_[IIO_MAX_DEVICES];
+    iio_device iioDevice;
+
     QString deviceId;
-    IioSensorType sensorType;
-    QString devicePath;
-    double scale;
-    int frequency;
-    int offset;
-    int numChannels;
 
     TimedXyzData* timedData;
     CalibratedMagneticFieldData *calData;

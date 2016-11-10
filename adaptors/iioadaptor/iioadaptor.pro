@@ -1,4 +1,5 @@
 TARGET = iioaccelerometeradaptor
+#TARGET = iiosensorsadaptor
 
 HEADERS += iioadaptor.h \
            iioadaptorplugin.h
