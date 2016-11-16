@@ -228,7 +228,7 @@ int IioAdaptor::findSensor(const QString &sensorName)
     }
     udev_device_unref(dev);
     udev_enumerate_unref(enumerate);
-qDebug() << "<<<<<<<<<<<<<<<<<<";
+
     if (ok2)
         return iioDevice.index;
     else
@@ -249,6 +249,10 @@ bool IioAdaptor::deviceEnable(int device, int enable)
     qDebug() << Q_FUNC_INFO <<"device"<< device <<"enable" << enable;
     qDebug() << "devicePath" << iioDevice.devicePath << iioDevice.name;
     qDebug() << "dev_accl_" << devNodeNumber;
+    qDebug() << "scale" << (double)iioDevice.scale
+             << "offset" << iioDevice.offset
+             << "frequency" << iioDevice.frequency;
+
     if (devNodeNumber == -1)
         return false;
 
@@ -357,7 +361,6 @@ int IioAdaptor::scanElementsEnable(int device, int enable)
     return list.size();
 }
 
-
 int IioAdaptor::deviceChannelParseBytes(QString filename)
 {
     QString type = sysfsReadString(filename);
@@ -379,7 +382,7 @@ void IioAdaptor::processSample(int fileId, int fd)
 {
     char buf[IIO_BUFFER_LEN];
     int readBytes = 0;
-    quint16 result = 0;
+    qreal result = 0;
     int channel = fileId%IIO_MAX_DEVICE_CHANNELS;
     int device = (fileId - channel)/IIO_MAX_DEVICE_CHANNELS;
 
@@ -390,19 +393,18 @@ void IioAdaptor::processSample(int fileId, int fd)
             sensordLogW() << "read():" << strerror(errno);
             return;
         }
-        buf[sizeof(buf)-1] = '\0';
-
-        result = atoi(buf);
+        result = strtol(buf, NULL, 10);
 
         if (result == 0)
             return;
+
         switch(channel) {
         case 0: {
             switch (iioDevice.sensorType) {
             case IioAdaptor::IIO_ACCELEROMETER:
             case IioAdaptor::IIO_GYROSCOPE:
                 timedData = iioXyzBuffer_->nextSlot();
-                timedData->x_= -(result + iioDevice.offset) * iioDevice.scale * 100;
+                timedData->x_= -(result + iioDevice.offset) * iioDevice.scale * 1000 * REV_GRAVITY;
                 break;
             case IioAdaptor::IIO_MAGNETOMETER:
                 calData = magnetometerBuffer_->nextSlot();
@@ -423,7 +425,7 @@ void IioAdaptor::processSample(int fileId, int fd)
             case IioAdaptor::IIO_ACCELEROMETER:
             case IioAdaptor::IIO_GYROSCOPE:
                 timedData = iioXyzBuffer_->nextSlot();
-                timedData->y_= -(result + iioDevice.offset) * iioDevice.scale * 100;
+                timedData->y_= -(result + iioDevice.offset) * iioDevice.scale * 1000 * REV_GRAVITY;
                 break;
             case IioAdaptor::IIO_MAGNETOMETER:
                 calData = magnetometerBuffer_->nextSlot();
@@ -441,7 +443,7 @@ void IioAdaptor::processSample(int fileId, int fd)
             case IioAdaptor::IIO_ACCELEROMETER:
             case IioAdaptor::IIO_GYROSCOPE:
                 timedData = iioXyzBuffer_->nextSlot();
-                timedData->z_ = -(result + iioDevice.offset) * iioDevice.scale * 100;
+                timedData->z_ = -(result + iioDevice.offset) * iioDevice.scale * 1000 * REV_GRAVITY;
                 break;
             case IioAdaptor::IIO_MAGNETOMETER:
                 calData = magnetometerBuffer_->nextSlot();
