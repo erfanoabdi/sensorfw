@@ -300,7 +300,9 @@ void SysfsAdaptor::stopReaderThread()
 {
     if (mode_ == SelectMode) {
         quint64 dummy = 1;
-        write(pipeDescriptors_[1], &dummy, 8);
+        ssize_t bytesWritten = write(pipeDescriptors_[1], &dummy, 8);
+        if (!bytesWritten)
+            qWarning() << "Could not write pipe descriptors";
     }
     else
         reader_.stopReader();

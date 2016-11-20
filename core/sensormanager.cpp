@@ -479,7 +479,7 @@ DeviceAdaptor* SensorManager::requestDeviceAdaptor(const QString& id)
     if( id.contains(';') ) // no parameter passing in release
     {
         setError( SmIdNotRegistered, QString(tr("unknown adaptor id '%1'").arg(id)) );
-        return NULL;
+        return Q_NULLPTR;
     }
 
     DeviceAdaptor* da = NULL;
@@ -619,9 +619,9 @@ bool SensorManager::write(int id, const void* source, int size)
 void SensorManager::sensorDataHandler(int)
 {
     PipeData pipeData;
-    read(pipefds_[0], &pipeData, sizeof(pipeData));
+    ssize_t bytesRead = read(pipefds_[0], &pipeData, sizeof(pipeData));
 
-    if (!socketHandler_->write(pipeData.id, pipeData.buffer, pipeData.size)) {
+    if (!bytesRead || !socketHandler_->write(pipeData.id, pipeData.buffer, pipeData.size)) {
         sensordLogW() << "Failed to write data to socket.";
     }
 

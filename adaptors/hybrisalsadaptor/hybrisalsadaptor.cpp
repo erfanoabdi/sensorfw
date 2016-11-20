@@ -86,7 +86,7 @@ void HybrisAlsAdaptor::sendInitialData()
         if ((fd = open(inputDev.toLatin1(), O_RDONLY)) > -1) {
 
             if (!ioctl(fd, EVIOCGABS(ABS_MISC), &absinfo)) {
-                if (absinfo.value != lastLightValue)
+                if (absinfo.value != (signed)lastLightValue)
                     lastLightValue = absinfo.value;
 
                 TimedUnsigned *d = buffer->nextSlot();

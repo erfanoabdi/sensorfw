@@ -66,18 +66,14 @@ void MagnetometerAdaptorNCDK::processSample(int pathId, int fd)
     int bytesRead = 0;
     bool isOK = (bytesRead = read(fd, &buf, sizeof(buf))) > 0;
 
-    switch (isOK)
-    {
-    case true:
+    if (isOK) {
         strList = QByteArray(buf, bytesRead).split(':');
-        if (strList.size() == 3)
-        {
+        if (strList.size() == 3) {
             x = adjustPos(strList.at(0).toInt(), x_adj);
             y = adjustPos(strList.at(1).toInt(), y_adj);
             z = adjustPos(strList.at(2).toInt(), z_adj);
-            break;
         }
-    case false:
+    } else {
         sensordLogW() << "Reading magnetometer error: " << strerror(errno);
         return;
     }

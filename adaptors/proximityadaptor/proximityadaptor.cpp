@@ -136,7 +136,7 @@ void ProximityAdaptor::processSample(int pathId, int fd)
             return;
         }
         sscanf(buffer, "%d", &rawdata);
-        if ( rawdata > threshold_ ) {
+        if ( (signed)rawdata > threshold_ ) {
             ret = 1;
         }
         sensordLogT() << "Proximity value: " << rawdata;
