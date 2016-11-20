@@ -16,7 +16,8 @@ HEADERS += adaptortest.h \
     ../../adaptors/touchadaptor/touchadaptor.h \
     ../../adaptors/kbslideradaptor/kbslideradaptor.h \
     ../../adaptors/proximityadaptor/proximityadaptor.h \
-    ../../adaptors/gyroscopeadaptor/gyroscopeadaptor.h
+    ../../adaptors/gyroscopeadaptor/gyroscopeadaptor.h \
+    ../../adaptors/lidsensoradaptor-evdev/lidsensoradaptor-evdev.h
 
 SOURCES += adaptortest.cpp \
     ../../datatypes/utils.cpp \
@@ -27,7 +28,8 @@ SOURCES += adaptortest.cpp \
     ../../adaptors/touchadaptor/touchadaptor.cpp \
     ../../adaptors/kbslideradaptor/kbslideradaptor.cpp \
     ../../adaptors/proximityadaptor/proximityadaptor.cpp \
-    ../../adaptors/gyroscopeadaptor/gyroscopeadaptor.cpp
+    ../../adaptors/gyroscopeadaptor/gyroscopeadaptor.cpp \
+    ../../adaptors/lidsensoradaptor-evdev/lidsensoradaptor-evdev.cpp
 
 
 INCLUDEPATH += ../.. \
@@ -43,7 +45,9 @@ INCLUDEPATH += ../.. \
     ../../adaptors/accelerometeradaptor \
     ../../adaptors/kbslideradaptor \
     ../../adaptors/proximityadaptor \
-    ../../adaptors/gyroscopeadaptor
+    ../../adaptors/gyroscopeadaptor \
+    ../../adaptors/lidsensoradaptor-evdev
+
 
 QMAKE_LIBDIR_FLAGS += -L../../builddir/core -L../../core/ -lrt
 

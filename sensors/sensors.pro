@@ -11,6 +11,10 @@ SUBDIRS  = accelerometersensor \
            compasssensor \
            rotationsensor \
            magnetometersensor \
-           gyroscopesensor
+           gyroscopesensor \
+           lidsensor \
+           humiditysensor \
+           pressuresensor \
+           temperaturesensor
 
 contextprovider:SUBDIRS += contextplugin

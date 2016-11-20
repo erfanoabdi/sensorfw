@@ -74,10 +74,12 @@ int InputDevAdaptor::getInputDevices(const QString& typeName)
         ++deviceCount_;
     } else if(deviceSysPathString.contains("%1")) {
         const int MAX_EVENT_DEV = 16;
+qDebug() << deviceNumber << deviceCount_ << maxDeviceCount_;
 
         // No configuration for this device, try find the device from the device system path
         while (deviceNumber < MAX_EVENT_DEV && deviceCount_ < maxDeviceCount_) {
             deviceName = deviceSysPathString.arg(deviceNumber);
+            qDebug() << Q_FUNC_INFO << deviceName;
             if (checkInputDevice(deviceName, typeName)) {
                 addPath(deviceName, deviceCount_);
                 ++deviceCount_;

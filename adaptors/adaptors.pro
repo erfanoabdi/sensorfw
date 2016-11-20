@@ -30,14 +30,20 @@ SUBDIRS = alsadaptor \
           mrstaccelerometer \
           gyroscopeadaptor \
           gyroscopeadaptor-evdev
+
 SUDBIRS += oemtabletmagnetometeradaptor
-SUBDIRS += pegatronaccelerometeradaptor 
+SUBDIRS += pegatronaccelerometeradaptor
 SUBDIRS += oemtabletalsadaptor-ascii
 SUBDIRS += oaktrailaccelerometer
 SUBDIRS += oemtabletaccelerometer
 SUDBIRS += oemtabletgyroscopeadaptor
 SUBDIRS += steaccelerometeradaptor
 SUBDIRS += mpu6050accelerometer
+SUBDIRS += lidsensoradaptor-evdev
+SUBDIRS += iioadaptor
+SUBDIRS += humidityadaptor
+SUBDIRS += pressureadaptor
+SUBDIRS += temperatureadaptor
 
 config_hybris {
     SUBDIRS += hybrisaccelerometer

@@ -39,6 +39,7 @@
 #include "kbslideradaptor.h"
 #include "proximityadaptor.h"
 #include "gyroscopeadaptor.h"
+#include "lidsensoradaptor-evdev.h"
 
 #include "config.h"
 
@@ -156,5 +157,17 @@ void AdaptorTest::testGyroscopeAdaptor()
     adaptor->stopAdaptor();
 }
 
+void AdaptorTest::testLidSensorAdaptor()
+{
+    LidSensorAdaptorEvdev* adaptor =
+            dynamic_cast<LidSensorAdaptorEvdev*>(LidSensorAdaptorEvdev::factoryMethod("lidsensoradaptor"));
+    QVERIFY( adaptor );
+
+    QVERIFY(adaptor->startAdaptor());
+    QVERIFY(adaptor->startSensor());
+
+    adaptor->stopSensor();
+    adaptor->stopAdaptor();
+}
 
 QTEST_MAIN(AdaptorTest)

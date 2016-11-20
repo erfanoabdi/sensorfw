@@ -17,7 +17,11 @@ SOURCES += sensormanagerinterface.cpp \
     proximitysensor_i.cpp \
     rotationsensor_i.cpp \
     magnetometersensor_i.cpp \
-    gyroscopesensor_i.cpp
+    gyroscopesensor_i.cpp \
+    lidsensor_i.cpp \
+    humiditysensor_i.cpp \
+    pressuresensor_i.cpp \
+    temperaturesensor_i.cpp
 
 HEADERS += sensormanagerinterface.h \
     sensormanager_i.h \
@@ -31,7 +35,11 @@ HEADERS += sensormanagerinterface.h \
     proximitysensor_i.h \
     rotationsensor_i.h \
     magnetometersensor_i.h \
-    gyroscopesensor_i.h
+    gyroscopesensor_i.h \
+    lidsensor_i.h \
+    humiditysensor_i.h \
+    pressuresensor_i.h \
+    temperaturesensor_i.h
 
 SENSORFW_INCLUDEPATHS = .. \
     ../include \

@@ -1,12 +1,14 @@
 /**
-   @file adaptortest.h
-   @brief Automatic tests for adaptors
+   @file alsadaptor-evdevplugin.h
+   @brief Plugin for TemperatureAdaptorPlugin
 
    <p>
    Copyright (C) 2009-2010 Nokia Corporation
+   Copyright (C) 2015 Jolla
 
+   @author Lorn Potter <lorn.potter@jolla.com>
    @author Timo Rongas <ext-timo.2.rongas@nokia.com>
-   @author Ustun Ergenoglu <ext-ustun.ergenoglu@nokia.com>
+   @author Markus Lehtonen <markus.lehtonen@nokia.com>
 
    This file is part of Sensord.
 
@@ -24,41 +26,20 @@
    </p>
 */
 
-#ifndef ADAPTORTEST_H
-#define ADAPTORTEST_H
+#ifndef TEMPERATUREADAPTOR_PLUGIN_H
+#define TEMPERATUREADAPTOR_PLUGIN_H
 
-#include <QTest>
+#include "plugin.h"
 
-class AdaptorTest : public QObject
+class TemperatureAdaptorPlugin : public Plugin
 {
-     Q_OBJECT;
+    Q_OBJECT
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Q_PLUGIN_METADATA(IID "com.nokia.SensorService.Plugin/1.0")
+#endif
 
-public:
-    AdaptorTest()
-    {
-    }
-
-protected:
-
-private slots:
-
-    // Setup
-    void initTestCase();
-    void init();
-    void cleanup();
-    void cleanupTestCase();
-
-    // Adaptor functionality
-    void testAccelerometerAdaptor();
-    void testMagnetometerAdaptor();
-    void testALSAdaptor();
-    void testTapAdaptor();
-    void testKeyboardSliderAdaptor();
-    void testProximityAdaptor();
-    void testTouchAdaptor();
-    void testGyroscopeAdaptor();
-    void testLidSensorAdaptor();
-
+private:
+    void Register(class Loader& l);
 };
 
-#endif // ADAPTORTEST_H
+#endif

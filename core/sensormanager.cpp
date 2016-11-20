@@ -322,8 +322,10 @@ int SensorManager::requestSensor(const QString& id)
     clearError();
 
     QString cleanId = getCleanId(id);
-    QMap<QString, SensorInstanceEntry>::iterator entryIt = sensorInstanceMap_.find(cleanId);
 
+    qDebug() << sensorInstanceMap_.keys();
+
+    QMap<QString, SensorInstanceEntry>::iterator entryIt = sensorInstanceMap_.find(cleanId);
     if ( entryIt == sensorInstanceMap_.end() )
     {
         setError(SmIdNotRegistered, QString(tr("requested sensor id '%1' not registered")).arg(cleanId));

@@ -5,6 +5,7 @@ TARGET = sensorfw
 include( ../common-config.pri )
 
 CONFIG += link_pkgconfig
+VERSION = 0.9.0
 
 SENSORFW_INCLUDEPATHS = .. \
                         ../include \

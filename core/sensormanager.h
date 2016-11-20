@@ -464,6 +464,7 @@ private:
 template<class SENSOR_TYPE>
 void SensorManager::registerSensor(const QString& sensorName)
 {
+    qDebug() << Q_FUNC_INFO << sensorName;
     if (sensorInstanceMap_.contains(sensorName)) {
         sensordLogW() << QString("<%1> Sensor is already present!").arg(sensorName);
         return;
