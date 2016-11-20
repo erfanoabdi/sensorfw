@@ -1,0 +1,8 @@
+Just a rough todo for myself:
+
+sensorfw needs new sensors:
+
+* humidity
+* holster (hal)
+* ir distance
+* pressure (w/altitude property)
