@@ -29,7 +29,6 @@
 */
 #include <errno.h>
 
-#include <iio.h>
 #include <libudev.h>
 
 #include <logging.h>
