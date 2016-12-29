@@ -38,15 +38,15 @@
 #include <time.h>
 
 #include "iioadaptor.h"
-#include <sensord-qt5/sysfsadaptor.h>
-#include <sensord-qt5/deviceadaptorringbuffer.h>
+#include <sysfsadaptor.h>
+#include <deviceadaptorringbuffer.h>
 #include <QTextStream>
 #include <QDir>
 #include <QTimer>
 #include <QDirIterator>
 #include <qmath.h>
 
-#include <sensord-qt5/deviceadaptor.h>
+#include <deviceadaptor.h>
 #include "datatypes/orientationdata.h"
 
 #define GRAVITY         9.80665

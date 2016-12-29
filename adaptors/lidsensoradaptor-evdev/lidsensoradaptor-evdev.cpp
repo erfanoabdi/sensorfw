@@ -78,7 +78,7 @@ void LidSensorAdaptorEvdev::init()
     qDebug() << Q_FUNC_INFO << name();
     QStringList strList = Config::configuration()->value<QStringList>(name() + "/input_match");
     qDebug() << strList;
-    for (const QString str : strList) {
+    foreach (const QString str, strList) {
         if (!getInputDevices(str)) {
             sensordLogW() << "Input device not found.";
             SysfsAdaptor::init();
