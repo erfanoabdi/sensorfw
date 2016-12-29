@@ -3,7 +3,7 @@ Section: misc
 Priority: optional
 Maintainer: Lorn Potter <lorn.potter@gmail.com>
 Uploaders: 
-Build-Depends: debhelper (>=5), qt5-default
+Build-Depends: debhelper (>=5), qt5-default, libudev-dev
 Standards-Version: 3.7.3
 
 Package: sensorfw-qt5
@@ -18,7 +18,7 @@ Package: libsensorfw-qt5-plugins
 Section: misc
 Priority: extra
 Architecture: any
-Depends: sensorfw-qt5 (= ${binary:Version}), ${misc:Depends}, libqt5core5a
+Depends: sensorfw-qt5 (= ${binary:Version}), ${misc:Depends}, libqt5core5a, udev
 Description: Sensor framework daemon and libraries plugins
  Platform plugins for sensorfw.
 
