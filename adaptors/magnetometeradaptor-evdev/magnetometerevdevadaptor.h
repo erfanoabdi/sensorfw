@@ -1,5 +1,5 @@
 /**
-   @file magnetometeradaptor-evdevplugin.cpp
+   @file magnetometerevdevadaptor.h
    @brief Contains MagnetometerAdaptorEvdevPlugin.
 
    <p>

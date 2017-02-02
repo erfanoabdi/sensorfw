@@ -49,14 +49,14 @@ public:
     /**
      * Constructor.
      *
-     * @param LidData Source object.
+     * @param lidData Source object.
      */
     Lid(const LidData& lidData);
 
     /**
      * Copy constructor.
      *
-     * @param Lid Source object.
+     * @param lid Source object.
      */
     Lid(const Lid& lid);
 
@@ -86,7 +86,7 @@ Q_DECLARE_METATYPE( Lid )
  * Marshall the Lid data into a D-Bus argument
  *
  * @param argument dbus argument.
- * @param Lid data to marshall.
+ * @param lid data to marshall.
  * @return dbus argument.
  */
 inline QDBusArgument &operator<<(QDBusArgument &argument, const Lid &lid)
@@ -101,7 +101,7 @@ inline QDBusArgument &operator<<(QDBusArgument &argument, const Lid &lid)
  * Unmarshall Lid data from the D-Bus argument
  *
  * @param argument dbus argument.
- * @param Lid unmarshalled data.
+ * @param lid unmarshalled data.
  * @return dbus argument.
  */
 inline const QDBusArgument &operator>>(const QDBusArgument &argument, Lid &lid)
