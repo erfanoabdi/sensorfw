@@ -137,6 +137,8 @@ int main(int argc, char *argv[])
     
     if (parser.createDaemon())
     {
+        fflush(0);
+
         int pid = fork();
 
         if(pid < 0)
@@ -145,7 +147,7 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         } else if (pid > 0) {
             sensordLogW() << "Created a daemon";
-            exit(EXIT_SUCCESS);
+            _exit(EXIT_SUCCESS);
         }
     }
 
