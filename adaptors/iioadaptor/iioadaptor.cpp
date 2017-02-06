@@ -154,7 +154,7 @@ int IioAdaptor::findSensor(const QString &sensorName)
 {
     udev_list_entry *devices;
     udev_list_entry *dev_list_entry;
-    udev_device *dev;
+    udev_device *dev = 0;
     struct udev *udevice = 0;
     struct udev_enumerate *enumerate = 0;
 
@@ -225,7 +225,8 @@ int IioAdaptor::findSensor(const QString &sensorName)
             }
         }
     }
-    udev_device_unref(dev);
+    if (dev)
+        udev_device_unref(dev);
     udev_enumerate_unref(enumerate);
 
     if (ok2)
