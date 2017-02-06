@@ -327,6 +327,8 @@ int IioAdaptor::sysfsReadInt(QString filename)
 // Return the number of channels
 int IioAdaptor::scanElementsEnable(int device, int enable)
 {
+    Q_UNUSED(device);
+
     QString elementsPath = iioDevice.devicePath + "scan_elements";
 
     QDir dir(elementsPath);
