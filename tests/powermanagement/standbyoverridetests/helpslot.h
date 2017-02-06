@@ -52,11 +52,15 @@ public:
         {
             while(!m_stop) {
                 msleep(250);
-                system(QString("echo 0 0 0 | datafaker %1 & { sleep 0.1; eval 'kill $!' &> /dev/null; }").arg(m_inputFile).toLatin1().constData());
+                if (system(QString("echo 0 0 0 | datafaker %1 & { sleep 0.1; eval 'kill $!' &> /dev/null; }").arg(m_inputFile).toLatin1().constData()) != 0) {
+                    /* Gcc will complain about completely ignoring
+                     * system() return values. As we really do not
+                     * care here, use dummy test to silence warnings. */
+                }
             }
-
         }
     }
+
     QString m_inputFile;
     int m_valueCount;
     bool m_stop;
