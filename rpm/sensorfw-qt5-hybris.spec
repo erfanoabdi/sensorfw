@@ -46,7 +46,7 @@ export QT_SELECT=5
 
 %qmake5 CONFIG+=hybris
 
-make %{?jobs:-j%jobs}
+make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
