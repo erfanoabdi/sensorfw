@@ -1,5 +1,5 @@
 /**
-   @file LidData.h
+   @file liddata.h
    @brief Datatype for device tap events
 
    <p>
@@ -57,9 +57,10 @@ public:
      * Constructor.
      * @param timestamp Timestamp of lid event.
      * @param type Type of lid.
+     * @param value Initial value to use
      */
-    LidData(const quint64& timestamp, Type type, unsigned value_) :
-        TimedData(timestamp), type_(type), value_(0) {}
+    LidData(const quint64& timestamp, Type type, unsigned value) :
+        TimedData(timestamp), type_(type), value_(value) {}
 };
 
 Q_DECLARE_METATYPE(LidData)

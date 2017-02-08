@@ -109,12 +109,12 @@ SensorManager::SensorManager()
     deviation(0)
 {
     QString pluginPath;
+    const char* SOCKET_NAME = "/var/run/sensord.sock";
     QByteArray env = qgetenv("SENSORFW_SOCKET_PATH");
-    const char* SOCKET_NAME;
-    if (env.isEmpty())
-        SOCKET_NAME = "/var/run/sensord.sock";
-    else
-        SOCKET_NAME = env+"/var/run/sensord.sock";
+    if (!env.isEmpty()) {
+      env += SOCKET_NAME;
+      SOCKET_NAME = env;
+    }
 
     new SensorManagerAdaptor(this);
 

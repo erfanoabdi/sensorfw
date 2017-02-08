@@ -75,22 +75,6 @@
 //#define SENSOR_TYPE_STEP_COUNTER (19)
 //#define SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR (20)
 
-static QHash<QString,int> HybrisAdaptor_sensorTypes()
-{
-    QHash<QString,int> types;
-    types["accelerometer"] = SENSOR_TYPE_ACCELEROMETER;
-    types["magnetomoter"] = SENSOR_TYPE_MAGNETIC_FIELD;
-    types["orientation"] = SENSOR_TYPE_ORIENTATION;
-    types["gyroscope"] = SENSOR_TYPE_GYROSCOPE;
-    types["light"] = SENSOR_TYPE_LIGHT;
-    types["pressure"] = SENSOR_TYPE_PRESSURE;
-    types["temperature"] = SENSOR_TYPE_TEMPERATURE;
-    types["proximity"] = SENSOR_TYPE_PROXIMITY;
-    types["gravity"] = SENSOR_TYPE_GRAVITY;
-    types["lacceration"] = SENSOR_TYPE_LINEAR_ACCELERATION;
-    return types;
-}
-
 Q_GLOBAL_STATIC(HybrisManager, hybrisManager)
 
 HybrisManager::HybrisManager(QObject *parent)

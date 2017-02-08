@@ -920,8 +920,9 @@ TestClient::~TestClient()
 void TestClient::dataAvailable(const MagneticField&)
 {
     QTime now = QTime::currentTime();
+    ++dataCount;
     qDebug() << "dataAvailable() "
-             << ++dataCount << " in "
+             << dataCount << " in "
              << (dataCount > -1 ? m_exTimeData.msecsTo(now) : 0)
              << " ms" ;
     m_exTimeData = now;
@@ -943,8 +944,9 @@ void TestClient::frameAvailable(const QVector<MagneticField>& frame)
 void TestClient::dataAvailable2(const XYZ&)
 {
     QTime now = QTime::currentTime();
+    ++dataCount;
     qDebug() << "dataAvailable() "
-             << ++dataCount
+             << dataCount
              << " in "
              << (dataCount > -1 ? m_exTimeData.msecsTo(now) : 0)
              << " ms";
