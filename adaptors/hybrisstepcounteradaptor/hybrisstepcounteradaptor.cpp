@@ -26,6 +26,10 @@
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
 
+#ifndef SENSOR_TYPE_STEP_COUNTER
+#define SENSOR_TYPE_STEP_COUNTER (19)
+#endif
+
 HybrisStepCounterAdaptor::HybrisStepCounterAdaptor(const QString& id) :
     HybrisAdaptor(id, SENSOR_TYPE_STEP_COUNTER)
 {
