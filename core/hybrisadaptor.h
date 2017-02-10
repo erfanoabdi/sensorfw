@@ -24,6 +24,7 @@
 #include <QObject>
 #include <QThread>
 #include <QTimer>
+#include <QFile>
 
 #include "deviceadaptor.h"
 #include <hardware/sensors.h>
@@ -130,6 +131,7 @@ protected:
     virtual unsigned int interval() const;
     virtual bool setInterval(const unsigned int value, const int sessionId);
     virtual unsigned int evaluateIntervalRequests(int& sessionId) const;
+    static bool writeToFile(const QByteArray& path, const QByteArray& content);
 
 private:
     void stopReaderThread();

@@ -25,6 +25,7 @@
 #include "logging.h"
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
+#include "config.h"
 
 #ifndef SENSOR_TYPE_STEP_COUNTER
 #define SENSOR_TYPE_STEP_COUNTER (19)
@@ -40,6 +41,7 @@ HybrisStepCounterAdaptor::HybrisStepCounterAdaptor(const QString& id) :
     buffer = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("stepcounter", "Internal step counter steps since reboot", buffer);
     setDescription("Hybris step counter");
+    powerStatePath = Config::configuration()->value("stepcounter/powerstate_path").toByteArray();
 }
 
 HybrisStepCounterAdaptor::~HybrisStepCounterAdaptor()
@@ -49,6 +51,8 @@ HybrisStepCounterAdaptor::~HybrisStepCounterAdaptor()
 
 bool HybrisStepCounterAdaptor::startSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
 
@@ -63,6 +67,8 @@ void HybrisStepCounterAdaptor::sendInitialData()
 
 void HybrisStepCounterAdaptor::stopSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
     sensordLogD() << "Hybris HybrisStepCounterAdaptor stop\n";
 }

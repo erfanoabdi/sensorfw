@@ -55,6 +55,7 @@ protected:
 private:
     DeviceAdaptorRingBuffer<CompassData>* buffer;
     int sensorType;
+    QByteArray powerStatePath;
 
 };
 #endif

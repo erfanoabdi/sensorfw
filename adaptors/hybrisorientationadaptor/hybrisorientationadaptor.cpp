@@ -22,6 +22,7 @@
 #include "logging.h"
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
+#include "config.h"
 
 /*
  * azimuth: angle between the magnetic north direction and the Y axis, around
@@ -47,6 +48,7 @@ HybrisOrientationAdaptor::HybrisOrientationAdaptor(const QString& id) :
     setAdaptedSensor("hybrisorientation", "Internal orientation coordinates", buffer);
 
     setDescription("Hybris orientation");
+    powerStatePath = Config::configuration()->value("orientation/powerstate_path").toByteArray();
 //    setDefaultInterval(50);
 }
 
@@ -57,6 +59,8 @@ HybrisOrientationAdaptor::~HybrisOrientationAdaptor()
 
 bool HybrisOrientationAdaptor::startSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
 
@@ -66,6 +70,8 @@ bool HybrisOrientationAdaptor::startSensor()
 
 void HybrisOrientationAdaptor::stopSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
     sensordLogD() << "Hybris OrientationAdaptor stop\n";
 }

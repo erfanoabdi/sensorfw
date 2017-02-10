@@ -22,6 +22,7 @@
 #include "logging.h"
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
+#include "config.h"
 
 #define GRAVITY_RECIPROCAL_THOUSANDS 101.971621298
 
@@ -32,6 +33,7 @@ HybrisAccelerometerAdaptor::HybrisAccelerometerAdaptor(const QString& id) :
     setAdaptedSensor("accelerometer", "Internal accelerometer coordinates", buffer);
 
     setDescription("Hybris accelerometer");
+    powerStatePath = Config::configuration()->value("accelerometer/powerstate_path").toByteArray();
 //    setDefaultInterval(50);
 }
 
@@ -42,15 +44,18 @@ HybrisAccelerometerAdaptor::~HybrisAccelerometerAdaptor()
 
 bool HybrisAccelerometerAdaptor::startSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
-
     sensordLogD() << "Hybris AccelAdaptor start\n";
     return true;
 }
 
 void HybrisAccelerometerAdaptor::stopSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
     sensordLogD() << "Hybris AccelAdaptor stop\n";
 }

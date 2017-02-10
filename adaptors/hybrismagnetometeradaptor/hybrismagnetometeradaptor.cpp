@@ -18,11 +18,11 @@
 **
 ****************************************************************************/
 
-#include "config.h"
 #include "hybrismagnetometeradaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
+#include "config.h"
 
 HybrisMagnetometerAdaptor::HybrisMagnetometerAdaptor(const QString& id) :
     HybrisAdaptor(id,SENSOR_TYPE_MAGNETIC_FIELD)
@@ -31,6 +31,7 @@ HybrisMagnetometerAdaptor::HybrisMagnetometerAdaptor(const QString& id) :
     setAdaptedSensor("magnetometer", "Internal magnetometer coordinates", buffer);
 
     setDescription("Hybris magnetometer");
+    powerStatePath = Config::configuration()->value("magnetometer/powerstate_path").toByteArray();
     //setStandbyOverride(false);
     setDefaultInterval(50);
 }
@@ -42,6 +43,8 @@ HybrisMagnetometerAdaptor::~HybrisMagnetometerAdaptor()
 
 bool HybrisMagnetometerAdaptor::startSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
     sensordLogD() << "HybrisMagnetometerAdaptor start\n";
@@ -50,6 +53,8 @@ bool HybrisMagnetometerAdaptor::startSensor()
 
 void HybrisMagnetometerAdaptor::stopSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
     sensordLogD() << "HybrisMagnetometerAdaptor stop\n";
 }

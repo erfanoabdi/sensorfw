@@ -22,6 +22,7 @@
 #include "logging.h"
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
+#include "config.h"
 #include <math.h>
 
 #define RADIANS_TO_DEGREESECONDS 57295.7795
@@ -34,6 +35,7 @@ HybrisGyroscopeAdaptor::HybrisGyroscopeAdaptor(const QString& id) :
     setAdaptedSensor("gyroscopeadaptor", "Internal gyroscope coordinates", buffer);
 
     setDescription("Hybris gyroscope");
+    powerStatePath = Config::configuration()->value("gyroscope/powerstate_path").toByteArray();
     setDefaultInterval(50);
 }
 
@@ -44,6 +46,8 @@ HybrisGyroscopeAdaptor::~HybrisGyroscopeAdaptor()
 
 bool HybrisGyroscopeAdaptor::startSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
 
@@ -53,6 +57,8 @@ bool HybrisGyroscopeAdaptor::startSensor()
 
 void HybrisGyroscopeAdaptor::stopSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
     sensordLogD() << "HybrisGyroscopeAdaptor stop\n";
 }

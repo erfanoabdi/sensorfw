@@ -64,6 +64,7 @@ protected:
 
 private:
     DeviceAdaptorRingBuffer<TimedUnsigned>* buffer;
+    QByteArray powerStatePath;
 
 };
 #endif
