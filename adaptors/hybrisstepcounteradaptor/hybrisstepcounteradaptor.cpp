@@ -42,6 +42,11 @@ HybrisStepCounterAdaptor::HybrisStepCounterAdaptor(const QString& id) :
     setAdaptedSensor("stepcounter", "Internal step counter steps since reboot", buffer);
     setDescription("Hybris step counter");
     powerStatePath = Config::configuration()->value("stepcounter/powerstate_path").toByteArray();
+    if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
+    {
+    	sensordLogW() << "Path does not exists: " << powerStatePath;
+    	powerStatePath.clear();
+    }
 }
 
 HybrisStepCounterAdaptor::~HybrisStepCounterAdaptor()

@@ -49,6 +49,11 @@ HybrisOrientationAdaptor::HybrisOrientationAdaptor(const QString& id) :
 
     setDescription("Hybris orientation");
     powerStatePath = Config::configuration()->value("orientation/powerstate_path").toByteArray();
+    if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
+    {
+    	sensordLogW() << "Path does not exists: " << powerStatePath;
+    	powerStatePath.clear();
+    }
 //    setDefaultInterval(50);
 }
 

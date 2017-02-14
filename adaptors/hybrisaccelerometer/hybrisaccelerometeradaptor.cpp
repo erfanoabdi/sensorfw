@@ -48,6 +48,7 @@ bool HybrisAccelerometerAdaptor::startSensor()
         writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
+
     sensordLogD() << "Hybris AccelAdaptor start\n";
     return true;
 }

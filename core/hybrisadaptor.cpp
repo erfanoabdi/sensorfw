@@ -558,7 +558,8 @@ bool HybrisAdaptor::writeToFile(const QByteArray& path, const QByteArray& conten
         sensordLogW() << "Failed to open '" << path << "': " << file.errorString();
         return false;
     }
-    if (file.write(content.constData(), content.size()) == -1) {
+    if (file.write(content.constData(), content.size()) == -1)
+    {
         sensordLogW() << "Failed to write to '" << path << "': " << file.errorString();
         file.close();
         return false;

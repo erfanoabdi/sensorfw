@@ -32,6 +32,11 @@ HybrisMagnetometerAdaptor::HybrisMagnetometerAdaptor(const QString& id) :
 
     setDescription("Hybris magnetometer");
     powerStatePath = Config::configuration()->value("magnetometer/powerstate_path").toByteArray();
+    if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
+    {
+    	sensordLogW() << "Path does not exists: " << powerStatePath;
+    	powerStatePath.clear();
+    }
     //setStandbyOverride(false);
     setDefaultInterval(50);
 }
@@ -47,6 +52,7 @@ bool HybrisMagnetometerAdaptor::startSensor()
         writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
+
     sensordLogD() << "HybrisMagnetometerAdaptor start\n";
     return true;
 }

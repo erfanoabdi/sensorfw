@@ -36,6 +36,11 @@ HybrisGyroscopeAdaptor::HybrisGyroscopeAdaptor(const QString& id) :
 
     setDescription("Hybris gyroscope");
     powerStatePath = Config::configuration()->value("gyroscope/powerstate_path").toByteArray();
+    if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
+    {
+    	sensordLogW() << "Path does not exists: " << powerStatePath;
+    	powerStatePath.clear();
+    }
     setDefaultInterval(50);
 }
 
