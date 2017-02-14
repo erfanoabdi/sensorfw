@@ -57,6 +57,7 @@ protected:
 private:
     DeviceAdaptorRingBuffer<CalibratedMagneticFieldData>* buffer;
     int sensorType;
+    QByteArray powerStatePath;
 
 };
 #endif

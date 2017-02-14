@@ -62,6 +62,7 @@ protected:
 private:
     DeviceAdaptorRingBuffer<TimedUnsigned>* buffer;
     unsigned lastLightValue;
+    QByteArray powerStatePath;
 
 };
 #endif

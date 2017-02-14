@@ -549,6 +549,26 @@ unsigned int HybrisAdaptor::evaluateIntervalRequests(int& sessionId) const
     return highestValue > 0 ? highestValue : defaultInterval();
 }
 
+bool HybrisAdaptor::writeToFile(const QByteArray& path, const QByteArray& content)
+{
+    sensordLogT() << "Writing to '" << path << ": " << content;
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        sensordLogW() << "Failed to open '" << path << "': " << file.errorString();
+        return false;
+    }
+    if (file.write(content.constData(), content.size()) == -1)
+    {
+        sensordLogW() << "Failed to write to '" << path << "': " << file.errorString();
+        file.close();
+        return false;
+    }
+
+    file.close();
+    return true;
+}
+
 /*/////////////////////////////////////////////////////////////////////
 /// \brief HybrisAdaptorReader::HybrisAdaptorReader
 /// \param parent

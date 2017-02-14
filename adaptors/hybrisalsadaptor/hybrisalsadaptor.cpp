@@ -25,6 +25,7 @@
 #include "logging.h"
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
+#include "config.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -36,6 +37,12 @@ HybrisAlsAdaptor::HybrisAlsAdaptor(const QString& id) :
     buffer = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("als", "Internal ambient light sensor lux values", buffer);
     setDescription("Hybris als");
+    powerStatePath = Config::configuration()->value("als/powerstate_path").toByteArray();
+    if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
+    {
+    	sensordLogW() << "Path does not exists: " << powerStatePath;
+    	powerStatePath.clear();
+    }
 }
 
 HybrisAlsAdaptor::~HybrisAlsAdaptor()
@@ -45,6 +52,8 @@ HybrisAlsAdaptor::~HybrisAlsAdaptor()
 
 bool HybrisAlsAdaptor::startSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
 
@@ -111,6 +120,8 @@ void HybrisAlsAdaptor::sendInitialData()
 
 void HybrisAlsAdaptor::stopSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
     sensordLogD() << "Hybris HybrisAlsAdaptor stop\n";
 }

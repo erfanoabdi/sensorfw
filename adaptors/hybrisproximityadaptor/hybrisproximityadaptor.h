@@ -62,5 +62,7 @@ private:
     DeviceAdaptorRingBuffer<ProximityData>* buffer;
     int sensorType;
     int lastNearValue;
+    QByteArray powerStatePath;
+
 };
 #endif

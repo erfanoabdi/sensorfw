@@ -26,6 +26,7 @@
 #include "logging.h"
 #include "datatypes/utils.h"
 #include <hardware/sensors.h>
+#include "config.h"
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -38,6 +39,12 @@ HybrisProximityAdaptor::HybrisProximityAdaptor(const QString& id) :
         setAdaptedSensor("proximity", "Internal proximity coordinates", buffer);
 
         setDescription("Hybris proximity");
+        powerStatePath = Config::configuration()->value("proximity/powerstate_path").toByteArray();
+	if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
+	{
+	    sensordLogW() << "Path does not exists: " << powerStatePath;
+	    powerStatePath.clear();
+	}
     }
 }
 
@@ -50,6 +57,8 @@ HybrisProximityAdaptor::~HybrisProximityAdaptor()
 
 bool HybrisProximityAdaptor::startSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
     sensordLogD() << "HybrisProximityAdaptor start\n";
@@ -118,6 +127,8 @@ void HybrisProximityAdaptor::sendInitialData()
 
 void HybrisProximityAdaptor::stopSensor()
 {
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
     sensordLogD() << "HybrisProximityAdaptor stop\n";
 }

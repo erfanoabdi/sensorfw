@@ -57,5 +57,7 @@ protected:
 private:
     DeviceAdaptorRingBuffer<TimedXyzData>* buffer;
     int sensorType;
+    QByteArray powerStatePath;
+
 };
 #endif

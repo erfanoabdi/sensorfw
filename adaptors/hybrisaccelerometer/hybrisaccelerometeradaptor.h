@@ -57,6 +57,7 @@ protected:
 private:
     DeviceAdaptorRingBuffer<AccelerationData>* buffer;
     int sensorType;
+    QByteArray powerStatePath;
 
 };
 #endif
