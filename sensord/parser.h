@@ -48,6 +48,7 @@ public:
     bool contextInfo() const;
     bool magnetometerCalibration() const;
     bool createDaemon() const;
+    bool notifySystemd() const;
 
 private:
     void parsingCommandLine(QStringList arguments);
@@ -57,6 +58,7 @@ private:
     bool configFile_;
     bool configDir_;
     bool daemon_;
+    bool systemd_;
     bool magnetometerCalibration_;
 
     QString configFilePath_;

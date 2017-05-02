@@ -33,6 +33,8 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
 
+#include <systemd/sd-daemon.h>
+
 #include <signal.h>
 #include <iostream>
 #include <errno.h>
@@ -175,6 +177,11 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    if (parser.notifySystemd())
+    {
+        sd_notify(0, "READY=1");
+    }
+
     int ret = app.exec();
     sensordLogD() << "Exiting...";
     Config::close();
@@ -185,6 +192,7 @@ void printUsage()
 {
     qDebug() << "Usage: sensord [OPTIONS]";
     qDebug() << " -d, --daemon                     Detach from terminal and run as daemon.\n";
+    qDebug() << " -s, --systemd                    Notify systemd when ready.\n";
     qDebug() << " -l=N, --log-level=<level>        Use given logging level. Messages are logged for";
     qDebug() << "                                  the given and higher priority levels. Level";
     qDebug() << "                                  can also be notched up by sending SIGUSR1 to";

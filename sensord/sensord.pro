@@ -8,6 +8,8 @@ TARGET = sensorfwd
 CONFIG += console \
           link_pkgconfig
 
+PKGCONFIG += libsystemd
+
 SENSORFW_INCLUDEPATHS = .. \
                         ../include \
                         ../filters \

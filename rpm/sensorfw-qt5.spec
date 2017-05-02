@@ -20,6 +20,7 @@ BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  pkgconfig(Qt5Test)
 BuildRequires:  pkgconfig(mlite5)
+BuildRequires:  pkgconfig(libsystemd)
 BuildRequires:  doxygen
 BuildRequires:  systemd
 BuildRequires:  libudev-devel
