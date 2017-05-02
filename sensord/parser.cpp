@@ -33,6 +33,7 @@ Parser::Parser(QStringList arguments) :
     configFile_(false),
     configDir_(false),
     daemon_(false),
+    systemd_(false),
     magnetometerCalibration_(true),
     configFilePath_(""),
     logLevel_(QtWarningMsg)
@@ -81,7 +82,9 @@ void Parser::parsingCommandLine(QStringList arguments)
         else if (opt.startsWith("--no-magnetometer-bg-calibration"))
             magnetometerCalibration_ = false;
         else if (opt.startsWith("-d") || opt.startsWith("--daemon"))
-            daemon_ = true;
+            daemon_ = true, systemd_ = false;
+        else if (opt.startsWith("-s") || opt.startsWith("--systemd"))
+            systemd_ = true, daemon_ = false;
         else if (opt.startsWith("-h") || opt.startsWith("--help"))
             printHelp_ = true;
         else if (opt.startsWith("-"))
@@ -132,5 +135,10 @@ bool Parser::magnetometerCalibration() const
 bool Parser::createDaemon() const
 {
     return daemon_;
+}
+
+bool Parser::notifySystemd() const
+{
+    return systemd_;
 }
 
