@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
             sensordLogC() << "Failed to create a daemon: " << strerror(errno);
             exit(EXIT_FAILURE);
         } else if (pid > 0) {
-            sensordLogW() << "Created a daemon";
+            sensordLogD() << "Created a daemon";
             _exit(EXIT_SUCCESS);
         }
     }
