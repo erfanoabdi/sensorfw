@@ -22,8 +22,8 @@
    License along with Sensord.  If not, see <http://www.gnu.org/licenses/>.
    </p>
 */
-#ifndef PRESSUREEVDEVADAPTOR_H
-#define PRESSUREEVDEVADAPTOR_H
+#ifndef PRESSUREADAPTOR_H
+#define PRESSUREADAPTOR_H
 
 #include "inputdevadaptor.h"
 #include "deviceadaptorringbuffer.h"

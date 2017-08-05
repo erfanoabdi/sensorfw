@@ -1,6 +1,6 @@
 /**
-   @file alsevdevadaptor.cpp
-   @brief Plugin for HumidityAdaptor
+   @file humidityadaptor.cpp
+   @brief Contains HumidityAdaptor
 
    <p>
    Copyright (C) 2016 Canonical LTD.

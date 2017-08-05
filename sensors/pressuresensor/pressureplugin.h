@@ -1,6 +1,6 @@
 /**
-   @file alsplugin.h
-   @brief Plugin for ALSSensor
+   @file pressureplugin.h
+   @brief Plugin for PressureSensor
 
    <p>
    Copyright (C) 2016 Canonical LTD.

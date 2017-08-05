@@ -53,7 +53,7 @@ TemperatureSensorChannel::TemperatureSensorChannel(const QString& id) :
     filterBin_->add(temperatureReader_, "temperature");
     filterBin_->add(outputBuffer_, "buffer");
 
-    filterBin_->join("als", "source", "buffer", "sink");
+    filterBin_->join("temperature", "source", "buffer", "sink");
 
     // Join datasources to the chain
     connectToSource(temperatureAdaptor_, "temperature", temperatureReader_);
@@ -63,7 +63,7 @@ TemperatureSensorChannel::TemperatureSensorChannel(const QString& id) :
 
     outputBuffer_->join(this);
 
-    setDescription("ambient temperature in celcious");
+    setDescription("ambient temperature in celsius");
     setRangeSource(temperatureAdaptor_);
     addStandbyOverrideSource(temperatureAdaptor_);
     setIntervalSource(temperatureAdaptor_);
@@ -78,7 +78,7 @@ TemperatureSensorChannel::~TemperatureSensorChannel()
 
         disconnectFromSource(temperatureAdaptor_, "temperature", temperatureReader_);
 
-        sm.releaseDeviceAdaptor("alsadaptor");
+        sm.releaseDeviceAdaptor("temperatureadaptor");
 
         delete temperatureReader_;
         delete outputBuffer_;

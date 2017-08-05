@@ -1,6 +1,6 @@
 /**
-   @file pressureadaptor.h
-   @brief Plugin for PressureAdaptorPlugin
+   @file pressureadaptorplugin.h
+   @brief Plugin for PressureAdaptor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.
@@ -23,8 +23,8 @@
    </p>
 */
 
-#ifndef ALSADAPTOR_EVDEVPLUGIN_H
-#define ALSADAPTOR_EVDEVPLUGIN_H
+#ifndef PRESSUREADAPTOR_PLUGIN_H
+#define PRESSUREADAPTOR_PLUGIN_H
 
 #include "plugin.h"
 

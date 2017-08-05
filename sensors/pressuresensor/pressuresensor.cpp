@@ -36,7 +36,7 @@ PressureSensorChannel::PressureSensorChannel(const QString& id) :
 {
     SensorManager& sm = SensorManager::instance();
 
-    pressureAdaptor_ = sm.requestDeviceAdaptor("alsadaptor");
+    pressureAdaptor_ = sm.requestDeviceAdaptor("pressureadaptor");
     if (!pressureAdaptor_) {
         setValid(false);
         return;
@@ -49,20 +49,20 @@ PressureSensorChannel::PressureSensorChannel(const QString& id) :
     // Create buffers for filter chain
     filterBin_ = new Bin;
 
-    filterBin_->add(pressureReader_, "als");
+    filterBin_->add(pressureReader_, "pressure");
     filterBin_->add(outputBuffer_, "buffer");
 
-    filterBin_->join("als", "source", "buffer", "sink");
+    filterBin_->join("pressure", "source", "buffer", "sink");
 
     // Join datasources to the chain
-    connectToSource(pressureAdaptor_, "als", pressureReader_);
+    connectToSource(pressureAdaptor_, "pressure", pressureReader_);
 
     marshallingBin_ = new Bin;
     marshallingBin_->add(this, "sensorchannel");
 
     outputBuffer_->join(this);
 
-    setDescription("ambient light intensity in lux");
+    setDescription("ambient pressure in pascals");
     setRangeSource(pressureAdaptor_);
     addStandbyOverrideSource(pressureAdaptor_);
     setIntervalSource(pressureAdaptor_);
@@ -77,7 +77,7 @@ PressureSensorChannel::~PressureSensorChannel()
 
         disconnectFromSource(pressureAdaptor_, "pressure", pressureReader_);
 
-        sm.releaseDeviceAdaptor("alsadaptor");
+        sm.releaseDeviceAdaptor("pressureadaptor");
 
         delete pressureReader_;
         delete outputBuffer_;

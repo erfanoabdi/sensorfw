@@ -1,6 +1,6 @@
 /**
    @file LidPlugin.cpp
-   @brief Plugin for ALSSensor
+   @brief Plugin for LidSensor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.

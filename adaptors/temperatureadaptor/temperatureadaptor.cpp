@@ -1,6 +1,6 @@
 /**
    @file temperatureadaptor.cpp
-   @brief Plugin for TemperatureAdaptor
+   @brief Contains TemperatureAdaptor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.

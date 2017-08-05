@@ -1,6 +1,6 @@
 /**
-   @file alsadaptor-evdevplugin.h
-   @brief Plugin for TemperatureAdaptorPlugin
+   @file temperatureadaptorplugin.h
+   @brief Plugin for TemperatureAdaptor
 
    <p>
    Copyright (C) 2009-2010 Nokia Corporation
