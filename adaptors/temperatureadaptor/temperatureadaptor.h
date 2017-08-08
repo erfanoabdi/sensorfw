@@ -1,6 +1,6 @@
 /**
    @file temperatureadaptor.h
-   @brief Contains TemperatureAdaptor.
+   @brief Contains TemperatureAdaptor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.

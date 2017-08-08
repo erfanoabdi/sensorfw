@@ -1,6 +1,6 @@
 /**
    @file humidityadaptor.h
-   @brief Contains HumidityAdaptorPlugin.
+   @brief Contains HumidityAdaptor
 
    <p>
    Copyright (C) 2016 Canonical LTD.
@@ -22,8 +22,8 @@
    License along with Sensord.  If not, see <http://www.gnu.org/licenses/>.
    </p>
 */
-#ifndef HUMIDITYEVDEVADAPTOR_H
-#define HUMIDITYEVDEVADAPTOR_H
+#ifndef HUMIDITYADAPTOR_H
+#define HUMIDITYADAPTOR_H
 
 #include "inputdevadaptor.h"
 #include "deviceadaptorringbuffer.h"

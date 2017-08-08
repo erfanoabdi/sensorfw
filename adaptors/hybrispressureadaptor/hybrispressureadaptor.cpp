@@ -1,0 +1,81 @@
+/****************************************************************************
+**
+** Copyright (C) 2013 Jolla Ltd
+** Contact: lorn.potter@jollamobile.com
+**
+** Copyright (C) 2017 Matti Lehtimäki
+** Contact: matti.lehtimaki@gmail.com
+**
+** $QT_BEGIN_LICENSE:LGPL$
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include <QFile>
+#include <QTextStream>
+
+#include "hybrispressureadaptor.h"
+#include "logging.h"
+#include "datatypes/utils.h"
+#include <hardware/sensors.h>
+#include "config.h"
+
+HybrisPressureAdaptor::HybrisPressureAdaptor(const QString& id) :
+    HybrisAdaptor(id,SENSOR_TYPE_PRESSURE)
+{
+    buffer = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
+    setAdaptedSensor("pressure", "Internal ambient pressure sensor values", buffer);
+    setDescription("Hybris pressure");
+    powerStatePath = Config::configuration()->value("pressure/powerstate_path").toByteArray();
+    if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
+    {
+        sensordLogW() << "Path does not exists: " << powerStatePath;
+        powerStatePath.clear();
+    }
+}
+
+HybrisPressureAdaptor::~HybrisPressureAdaptor()
+{
+    delete buffer;
+}
+
+bool HybrisPressureAdaptor::startSensor()
+{
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
+    if (!(HybrisAdaptor::startSensor()))
+        return false;
+
+    sensordLogD() << "Hybris HybrisPressureAdaptor start\n";
+    return true;
+}
+
+void HybrisPressureAdaptor::stopSensor()
+{
+    if(!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
+    HybrisAdaptor::stopSensor();
+    sensordLogD() << "Hybris HybrisPressureAdaptor stop\n";
+}
+
+void HybrisPressureAdaptor::processSample(const sensors_event_t& data)
+{
+    TimedUnsigned *d = buffer->nextSlot();
+    d->timestamp_ = quint64(data.timestamp * .001);
+    d->value_ = data.pressure * 100;//From hPa to Pa
+    buffer->commit();
+    buffer->wakeUpReaders();
+}
+
+void HybrisPressureAdaptor::init()
+{
+}

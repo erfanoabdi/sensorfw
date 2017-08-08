@@ -1,6 +1,6 @@
 /**
-   @file alsadaptorplugin-sysfs.cpp
-   @brief Plugin for ALSAdaptorSysfs
+   @file pressureadaptorplugin.cpp
+   @brief Plugin for PressureAdaptor
 
    <p>
    Copyright (C) 2009-2010 Nokia Corporation

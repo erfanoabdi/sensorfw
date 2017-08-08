@@ -1,6 +1,6 @@
 /**
    @file pressureadaptor.cpp
-   @brief Plugin for PressureAdaptor
+   @brief Contains PressureAdaptor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.

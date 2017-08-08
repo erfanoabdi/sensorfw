@@ -1,6 +1,6 @@
 /**
-   @file alsadaptor-evdevplugin.h
-   @brief Plugin for HumidityAdaptorPlugin
+   @file humidityadaptorplugin.h
+   @brief Plugin for HumidityAdaptor
 
    <p>
    Copyright (C) 2016 Canonical LTD.

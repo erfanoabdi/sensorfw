@@ -23,8 +23,8 @@
    </p>
  */
 
-#ifndef ALS_SENSOR_H
-#define ALS_SENSOR_H
+#ifndef TEMPERATURE_SENSOR_H
+#define TEMPERATURE_SENSOR_H
 
 #include <QtDBus/QtDBus>
 #include <QObject>

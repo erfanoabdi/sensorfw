@@ -1,6 +1,6 @@
 /**
    @file PressurePlugin.cpp
-   @brief Plugin for ALSSensor
+   @brief Plugin for PressureSensor
 
    <p>
    Copyright (C) 2016 Canonical LTD.

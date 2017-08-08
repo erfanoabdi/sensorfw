@@ -1,6 +1,6 @@
 /**
-   @file humidityadaptor.cpp
-   @brief Plugin for HumidityAdaptorPlugin
+   @file humidityadaptorplugin.cpp
+   @brief Plugin for HumidityAdaptor
 
    <p>
    Copyright (C) 2016 Canonical LTD.

@@ -1,6 +1,6 @@
 /**
    @file humiditysensor_a.h
-   @brief D-Bus adaptor for ALSSensor
+   @brief D-Bus adaptor for HumiditySensor
 
    <p>
    Copyright (C) 2016 Canonical LTD.
