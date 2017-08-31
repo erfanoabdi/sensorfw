@@ -119,11 +119,29 @@ void HybrisManager::init()
     sensorsCount = module->get_sensors_list(module, &sensorList);
 
     for (int i = 0 ; i < sensorsCount ; i++) {
+        bool use = true;
+        // Assumption: The primary sensor variants that we want to
+        // use are listed before the secondary ones that we want
+        // to ignore -> Use the 1st entry found for each sensor type.
+        if( sensorMap.contains(sensorList[i].type) ) {
+            use = false;
+        }
+
         // some devices have compass and compass raw,
         // ignore compass raw. compass has range 360
-        if (sensorList[i].type != SENSOR_TYPE_ORIENTATION
-                || sensorList[i].maxRange == 360)
-        sensorMap.insert(sensorList[i].type, i);
+        if (sensorList[i].type == SENSOR_TYPE_ORIENTATION &&
+            sensorList[i].maxRange != 360) {
+            use = false;
+        }
+
+        sensordLogW() << Q_FUNC_INFO
+            << (use ? "SELECT" : "IGNORE")
+            << "type:" << sensorList[i].type
+            << "name:" << (sensorList[i].name ?: "n/a");
+
+        if (use) {
+            sensorMap.insert(sensorList[i].type, i);
+        }
     }
 }
 
