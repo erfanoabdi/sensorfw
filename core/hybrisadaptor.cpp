@@ -28,6 +28,10 @@
 #include <hardware/hardware.h>
 #include <hardware/sensors.h>
 
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+
 #ifndef SENSOR_TYPE_ACCELEROMETER
 #define SENSOR_TYPE_ACCELEROMETER (1)
 #endif
@@ -617,6 +621,29 @@ void HybrisAdaptorReader::startReader()
     start();
 }
 
+static void ObtainTemporaryWakeLock()
+{
+    static bool triedToOpen = false;
+    static int wakeLockFd = -1;
+
+    if (!triedToOpen) {
+        triedToOpen = true;
+        wakeLockFd = ::open("/sys/power/wake_lock", O_RDWR);
+        if (wakeLockFd == -1) {
+            sensordLogW() << "wake locks not available:" << ::strerror(errno);
+        }
+    }
+
+    if (wakeLockFd != -1) {
+        sensordLogD() << "wake lock to guard sensor data io";
+        static const char m[] = "sensorfwd_pass_data 1000000000\n";
+        if( ::write(wakeLockFd, m, sizeof m - 1) == -1 ) {
+            sensordLogW() << "wake locking failed:" << ::strerror(errno);
+            ::close(wakeLockFd), wakeLockFd = -1;
+        }
+    }
+}
+
 void HybrisAdaptorReader::run()
 {
     int err = 0;
@@ -628,6 +655,7 @@ void HybrisAdaptorReader::run()
             sensordLogW() << "poll() failed" << strerror(-err);
             QThread::msleep(1000);
         } else {
+            bool blockSuspend = false;
             bool errorInInput = false;
 
             for (int i = 0; i < numberOfEvents; i++) {
@@ -637,9 +665,17 @@ void HybrisAdaptorReader::run()
                     sensordLogW()<< QString("incorrect event version (version=%1, expected=%2").arg(data.version).arg(sizeof(sensors_event_t));
                     errorInInput = true;
                 }
+                if (data.type == SENSOR_TYPE_PROXIMITY) {
+                    blockSuspend = true;
+                }
                 hybrisManager()->processSample(data);
 
             }
+
+            if (blockSuspend) {
+                ObtainTemporaryWakeLock();
+            }
+
             if (errorInInput)
                 QThread::msleep(50);
         }
