@@ -6,7 +6,7 @@ TARGET = hybrissensorfw
 include( ../common-config.pri )
 
 CONFIG += link_pkgconfig
-INCLUDEPATH+=/usr/include/android
+PKGCONFIG += android-headers
 
 SENSORFW_INCLUDEPATHS = .. \
                         ../include \

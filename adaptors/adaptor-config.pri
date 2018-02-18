@@ -17,3 +17,6 @@ target.path = $$PLUGINPATH
 
 INSTALLS += target
 
+config_hybris {
+    CONFIG += link_pkgconfig
+}
