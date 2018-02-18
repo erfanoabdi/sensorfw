@@ -1,0 +1,14 @@
+{
+    "role": {
+        "exeName":"/usr/sbin/sensorfwd",
+        "type": "privileged",
+        "allowedNames": ["com.nokia.SensorService"]
+    },
+    "permissions": [
+        {
+            "service":"com.nokia.SensorService",
+            "inbound":["*"],
+            "outbound":["*"]
+        }
+    ]
+}

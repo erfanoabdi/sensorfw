@@ -83,7 +83,11 @@ DeviceAdaptor::DeviceAdaptor(const QString& id) :
 #ifdef SENSORFW_MCE_WATCHER
     screenBlanked_(!SensorManager::instance().MCEWatcher()->displayEnabled())
 #else
-    screenBlanked_(false)
+    #ifdef SENSORFW_LUNA_SERVICE_CLIENT
+        screenBlanked_(!SensorManager::instance().LSClient_instance()->displayEnabled())
+    #else
+        screenBlanked_(false)
+    #endif
 #endif
 {
     setValid(true);

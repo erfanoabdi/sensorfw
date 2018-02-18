@@ -45,6 +45,10 @@
 class MceWatcher;
 #endif
 
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+#include "lsclient.h"
+#endif
+
 class QSocketNotifier;
 class SocketHandler;
 
@@ -322,6 +326,15 @@ public:
     MceWatcher* MCEWatcher() const;
 #endif
 
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+    /**
+     * Get pointer to LSClient instance.
+     *
+     * @return LSClient instance pointer.
+     */
+    LSClient* LSClient_instance() const;
+#endif
+
     double magneticDeviation();
     void setMagneticDeviation(double level);
 
@@ -334,14 +347,14 @@ private Q_SLOTS:
     void lostClient(int sessionId);
 
     /**
-     * Callback for MCE display state change event.
+     * Callback for MCE or LS display state change event.
      *
      * @param displayState display state.
      */
     void displayStateChanged(bool displayState);
 
     /**
-     * Callback for MCE powersave mode change event.
+     * Callback for MCE or LS powersave mode change event.
      *
      * @param deviceMode device PSM state.
      */
@@ -450,6 +463,9 @@ private:
 
     SocketHandler*                                 socketHandler_; /**< socket handler */
     MceWatcher*                                    mceWatcher_; /**< MCE watcher */
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+    LSClient*                                      lsClient_; /**< LS client */
+#endif
     SensorManagerError                             errorCode_; /** global error code */
     QString                                        errorString_; /** global error description */
     int                                            pipefds_[2]; /** pipe for sensor samples */

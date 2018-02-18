@@ -80,6 +80,14 @@ mce {
     DEFINES += SENSORFW_MCE_WATCHER
 }
 
+lunaservice {
+    SOURCES += lsclient.cpp
+    HEADERS += lsclient.h
+    DEFINES += SENSORFW_LUNA_SERVICE_CLIENT
+    PKGCONFIG += Qt5Gui json-c
+    PKGCONFIG += luna-service2 LunaSysMgrCommon LunaSysMgrIpcMessages
+}
+
 contains(CONFIG,hybris) {
 } else {
     publicheaders.path  = $${publicheaders.path}/core
