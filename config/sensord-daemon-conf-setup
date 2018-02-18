@@ -6,7 +6,7 @@
 
 cd /etc/sensorfw/
 if [ -x /usr/sbin/sensorfwd ]; then
-    if [ -f /usr/lib/libhybrissensorfw*.so ]; then
+    if ldconfig -p | grep libhybrissensorfw ; then
         # Always prefer hybris sensor backend to anything else (also overwrite
         # old setting, as sometimes the boardname matches, e.g. on grouper)
         if [ "$(readlink primaryuse.conf)" != sensord-hybris.conf ]; then
