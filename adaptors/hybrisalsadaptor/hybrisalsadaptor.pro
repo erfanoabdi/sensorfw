@@ -7,7 +7,7 @@ SOURCES += hybrisalsadaptor.cpp \
            hybrisalsadaptorplugin.cpp
 LIBS+= -L../../core -lhybrissensorfw-qt5
 
-include(../adaptor-config.pri )
+include( ../adaptor-config.pri )
 config_hybris {
-    INCLUDEPATH+=/usr/include/android
+    PKGCONFIG += android-headers
 }
