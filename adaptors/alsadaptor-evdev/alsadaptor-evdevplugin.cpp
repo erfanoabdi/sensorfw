@@ -1,6 +1,6 @@
 /**
-   @file alsadaptorplugin-sysfs.cpp
-   @brief Plugin for ALSAdaptorSysfs
+   @file alsadaptor-evdevplugin.cpp
+   @brief Plugin for ALSAdaptorEvdev
 
    <p>
    Copyright (C) 2009-2010 Nokia Corporation

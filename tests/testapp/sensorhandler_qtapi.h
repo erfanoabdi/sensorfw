@@ -1,5 +1,5 @@
 /**
-   @file sensorhandler.h
+   @file sensorhandler_qtapi.h
    @brief test application to create sensor
 
    <p>

@@ -1,6 +1,6 @@
 /**
-   @file alssensor_i.h
-   @brief Interface for ALSSensor
+   @file lidsensor_i.h
+   @brief Interface for LidSensor
 
    <p>
    Copyright (C) 2016 Canonical,  Ltd.

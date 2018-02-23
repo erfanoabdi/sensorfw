@@ -1,5 +1,5 @@
 /**
-   @file inputdevadaptor.cpp
+   @file alsevdevadaptor.h
    @brief Contains ALSAdaptorEvdev.
 
    <p>

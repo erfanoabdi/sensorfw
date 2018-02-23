@@ -1,5 +1,5 @@
 /**
-   @file LidPlugin.cpp
+   @file lidplugin.cpp
    @brief Plugin for LidSensor
 
    <p>

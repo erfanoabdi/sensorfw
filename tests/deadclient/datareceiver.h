@@ -1,5 +1,5 @@
 /**
-   @file deadclient.h
+   @file datareceiver.h
    @brief Automatic tests for dead client handling
    <p>
    Copyright (C) 2009-2010 Nokia Corporation

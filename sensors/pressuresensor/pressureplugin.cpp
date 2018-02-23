@@ -1,5 +1,5 @@
 /**
-   @file PressurePlugin.cpp
+   @file pressureplugin.cpp
    @brief Plugin for PressureSensor
 
    <p>

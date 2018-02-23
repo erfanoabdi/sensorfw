@@ -1,6 +1,6 @@
 /**
-   @file MagCoordinateAlignFilterPlugin.cpp
-   @brief Plugin for CoordinateAlignFilter
+   @file magcoordinatealignfilterplugin.cpp
+   @brief Plugin for MagCoordinateAlignFilter
 
    <p>
    Copyright (C) 2009-2010 Nokia Corporation

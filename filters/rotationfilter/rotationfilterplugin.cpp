@@ -1,5 +1,5 @@
 /**
-   @file rotationfilterplugin.cppp
+   @file rotationfilterplugin.cpp
    @brief Plugin for RotationFilter
 
    <p>

@@ -1,5 +1,5 @@
 /**
-   @file sensorhandler_qmsystem2.h
+   @file sensorhandler_qtmob.h
    @brief test application to create sensor
 
    <p>

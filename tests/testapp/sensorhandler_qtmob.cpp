@@ -1,5 +1,5 @@
 /**
-   @file sensorhandler_qmsystem2.cpp
+   @file sensorhandler_qtmob.cpp
    @brief sensor handler
    <p>
    Copyright (C) 2011 Nokia Corporation

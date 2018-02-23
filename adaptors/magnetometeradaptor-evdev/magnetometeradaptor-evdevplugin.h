@@ -1,6 +1,6 @@
 /**
-   @file alsadaptor-sysfsplugin.h
-   @brief Plugin for ALSAdaptorSysfs
+   @file magnetometeradaptor-evdevplugin.h
+   @brief Plugin for MagnetometerAdaptorEvdev
 
    <p>
    Copyright (C) 2009-2010 Nokia Corporation

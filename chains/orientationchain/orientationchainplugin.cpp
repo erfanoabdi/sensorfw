@@ -1,5 +1,5 @@
 /**
-   @file accelerometerchainplugin.cpp
+   @file orientationchainplugin.cpp
    @brief Plugin for AccelerometerChain
 
    <p>

@@ -1,5 +1,5 @@
 /**
-   @file accelerometersensor_a.cpp
+   @file samplesensor_a.cpp
    @brief Sample D-Bus adaptor for sensors
 
    <p>

@@ -1,6 +1,6 @@
 /**
-   @file accelerometerchainplugin.h
-   @brief Plugin for AccelerometerChain
+   @file orientationchainplugin.h
+   @brief Plugin for OrientationChain
 
    <p>
    Copyright (C) 2009-2010 Nokia Corporation

@@ -1,5 +1,5 @@
 /**
-   @file sensorhandler.cpp
+   @file sensorhandler_qtapi.cpp
    @brief sensor handler
    <p>
    Copyright (C) 2010-2011 Nokia Corporation

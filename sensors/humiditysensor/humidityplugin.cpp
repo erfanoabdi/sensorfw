@@ -1,5 +1,5 @@
 /**
-   @file HumidityPlugin.cpp
+   @file humidityplugin.cpp
    @brief Plugin for HumiditySensor
 
    <p>
