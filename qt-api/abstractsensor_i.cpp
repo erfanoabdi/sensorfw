@@ -31,6 +31,9 @@
 #ifdef SENSORFW_MCE_WATCHER
 #include "mcewatcher.h"
 #endif
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+#include "lsclient.h"
+#endif
 
 struct AbstractSensorChannelInterface::AbstractSensorChannelInterfaceImpl : public QDBusAbstractInterface
 {
@@ -78,6 +81,12 @@ AbstractSensorChannelInterface::AbstractSensorChannelInterface(const QString& pa
     MceWatcher *mcewatcher;
     mcewatcher = new MceWatcher(this);
     QObject::connect(mcewatcher,SIGNAL(displayStateChanged(bool)),
+                     this,SLOT(displayStateChanged(bool)),Qt::UniqueConnection);
+#endif
+#ifdef SENSORFW_LUNA_SERVICE
+    LSClient *lsclient;
+    lsclient = new LSClient(this);
+    QObject::connect(lsclient,SIGNAL(displayStateChanged(bool)),
                      this,SLOT(displayStateChanged(bool)),Qt::UniqueConnection);
 #endif
 }

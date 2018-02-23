@@ -36,6 +36,9 @@
 #ifdef SENSORFW_MCE_WATCHER
 #include "mcewatcher.h"
 #endif // SENSORFW_MCE_WATCHER
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+#include "lsclient.h"
+#endif // SENSORFW_LUNA_SERVICE_CLIENT
 #include <QSocketNotifier>
 #include <errno.h>
 #include "sockethandler.h"
@@ -144,6 +147,17 @@ SensorManager::SensorManager()
             this, SLOT(devicePSMStateChanged(const bool)));
 
 #endif //SENSORFW_MCE_WATCHER
+
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+
+    lsClient_ = new LSClient(this);
+    connect(lsClient_, SIGNAL(displayStateChanged(const bool)),
+            this, SLOT(displayStateChanged(const bool)));
+
+    connect(lsClient_, SIGNAL(devicePSMStateChanged(const bool)),
+            this, SLOT(devicePSMStateChanged(const bool)));
+
+#endif //SENSORFW_LUNA_SERVICE_CLIENT
 }
 
 SensorManager::~SensorManager()
@@ -203,6 +217,10 @@ SensorManager::~SensorManager()
 #ifdef SENSORFW_MCE_WATCHER
     delete mceWatcher_;
 #endif //SENSORFW_MCE_WATCHER
+
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+    delete lsClient_;
+#endif //SENSORFW_LUNA_SERVICE_CLIENT
 }
 
 void SensorManager::setError(SensorManagerError errorCode, const QString& errorString)
@@ -661,6 +679,10 @@ void SensorManager::displayStateChanged(bool displayState)
         emit displayOn();
 #ifdef SENSORFW_MCE_WATCHER
         if (!mceWatcher_->PSMEnabled())
+#else
+    #ifdef SENSORFW_LUNA_SERVICE_CLIENT
+            if (!lsClient_->PSMEnabled())
+    #endif // SENSORFW_LUNA_SERVICE_CLIENT
 #endif // SENSORFW_MCE_WATCHER
         {
             emit resumeCalibration();
@@ -806,6 +828,13 @@ MceWatcher* SensorManager::MCEWatcher() const
     return mceWatcher_;
 }
 #endif // SENSORFW_MCE_WATCHER
+
+#ifdef SENSORFW_LUNA_SERVICE_CLIENT
+LSClient* SensorManager::LSClient_instance() const
+{
+    return lsClient_;
+}
+#endif // SENSORFW_LUNA_SERVICE_CLIENT
 
 #ifdef SM_PRINT
 void SensorManager::print() const
