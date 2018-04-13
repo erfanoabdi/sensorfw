@@ -1,5 +1,17 @@
-load(configure)
-qtCompileTest(hybris)
+# RPM build: Hybris plugin has separate spec file that does:
+#   qmake CONFIG+=hybris
+# And pro-file behavioral differences are handled via:
+#   contains(CONFIG,hybris)  { ... }
+#
+# Debian builds: debian/rules triggers build time hybris check:
+#   qmake CONFIG+=autohybris
+# And pro-file behavioral differences are handled via:
+#   config_hybris { ... }
+
+contains(CONFIG,autohybris) {
+    load(configure)
+    qtCompileTest(hybris)
+}
 
 TEMPLATE = subdirs
 CONFIG += ordered
