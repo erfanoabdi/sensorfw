@@ -310,7 +310,7 @@ AbstractSensorChannel* SensorManager::addSensor(const QString& id)
 
 void SensorManager::removeSensor(const QString& id)
 {
-    sensordLogD() << "Removing sensor: " << id;
+    sensordLogD() << "SensorManager removing sensor:" << id;
 
     QMap<QString, SensorInstanceEntry>::iterator entryIt = sensorInstanceMap_.find(id);
     bus().unregisterObject(OBJECT_PATH + "/" + id);
@@ -321,7 +321,7 @@ void SensorManager::removeSensor(const QString& id)
 
 bool SensorManager::loadPlugin(const QString& name)
 {
-    sensordLogD() << "Loading plugin: " << name;
+    sensordLogD() << "SensorManager loading plugin:" << name;
 
     QString errorMessage;
     bool result;
@@ -335,7 +335,7 @@ bool SensorManager::loadPlugin(const QString& name)
 
 int SensorManager::requestSensor(const QString& id)
 {
-    sensordLogD() << "Requesting sensor: " << id;
+    sensordLogD() << "Requesting sensor:" << id;
 
     clearError();
 
@@ -440,7 +440,7 @@ AbstractChain* SensorManager::requestChain(const QString& id)
             {
                 chain = chainFactoryMap_[type](id);
                 Q_ASSERT(chain);
-                sensordLogD() << "Instantiated chain '" << id << "'. Valid = " << chain->isValid();
+                sensordLogD() << "Instantiated chain '" << id << "'. Valid =" << chain->isValid();
 
                 entryIt.value().cnt_++;
                 entryIt.value().chain_ = chain;
@@ -499,7 +499,7 @@ void SensorManager::releaseChain(const QString& id)
 
 DeviceAdaptor* SensorManager::requestDeviceAdaptor(const QString& id)
 {
-    sensordLogD() << "Requesting adaptor: " << id;
+    sensordLogD() << "Requesting adaptor:" << id;
 
     clearError();
     if( id.contains(';') ) // no parameter passing in release
@@ -517,7 +517,7 @@ DeviceAdaptor* SensorManager::requestDeviceAdaptor(const QString& id)
             Q_ASSERT( entryIt.value().adaptor_ );
             da = entryIt.value().adaptor_;
             entryIt.value().cnt_++;
-            sensordLogD() << "Found adaptor '" << id << "'. Ref count: " << entryIt.value().cnt_;
+            sensordLogD() << "Found adaptor '" << id << "'. Ref count:" << entryIt.value().cnt_;
         }
         else
         {
@@ -538,7 +538,7 @@ DeviceAdaptor* SensorManager::requestDeviceAdaptor(const QString& id)
                 {
                     entryIt.value().adaptor_ = da;
                     entryIt.value().cnt_++;
-                    sensordLogD() << "Instantiated adaptor '" << id << "'. Valid = " << da->isValid();
+                    sensordLogD() << "Instantiated adaptor '" << id << "'. Valid =" << da->isValid();
                 }
                 else
                 {
@@ -563,7 +563,7 @@ DeviceAdaptor* SensorManager::requestDeviceAdaptor(const QString& id)
 
 void SensorManager::releaseDeviceAdaptor(const QString& id)
 {
-    sensordLogD() << "Releasing adaptor: " << id;
+    sensordLogD() << "Releasing adaptor:" << id;
 
     clearError();
     if( id.contains(';') ) // no parameter passing in release
@@ -594,7 +594,7 @@ void SensorManager::releaseDeviceAdaptor(const QString& id)
             }
             else
             {
-                sensordLogD() << "Adaptor '" << id << "' has ref count: " << entryIt.value().cnt_;
+                sensordLogD() << "Adaptor '" << id << "' has ref count:" << entryIt.value().cnt_;
             }
         }
         else
@@ -610,7 +610,7 @@ void SensorManager::releaseDeviceAdaptor(const QString& id)
 
 FilterBase* SensorManager::instantiateFilter(const QString& id)
 {
-    sensordLogD() << "Instantiating filter: " << id;
+    sensordLogD() << "Instantiating filter:" << id;
 
     QMap<QString, FilterFactoryMethod>::iterator it = filterFactoryMap_.find(id);
     if(it == filterFactoryMap_.end())
@@ -673,7 +673,7 @@ void SensorManager::lostClient(int sessionId)
 
 void SensorManager::displayStateChanged(bool displayState)
 {
-    sensordLogD() << "Signal detected, display state changed to: " << displayState;
+    sensordLogD() << "Signal detected, display state changed to:" << displayState;
     if (displayState) {
         /// Emit signal to make background calibration resume from sleep
         emit displayOn();
