@@ -80,6 +80,11 @@ mce {
     DEFINES += SENSORFW_MCE_WATCHER
 }
 
+contains(CONFIG,ssusysinfo) {
+    PKGCONFIG += ssu-sysinfo
+    QMAKE_CXXFLAGS += -DUSE_SSUSYSINFO
+}
+
 lunaservice {
     SOURCES += lsclient.cpp
     HEADERS += lsclient.h

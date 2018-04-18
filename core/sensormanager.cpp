@@ -333,6 +333,24 @@ bool SensorManager::loadPlugin(const QString& name)
     return result;
 }
 
+QStringList SensorManager::availablePlugins() const
+{
+    Loader& l = Loader::instance();
+    return l.availablePlugins();
+}
+
+bool SensorManager::pluginAvailable(const QString &name) const
+{
+    Loader& l = Loader::instance();
+    return l.pluginAvailable(name);
+}
+
+QStringList SensorManager::availableSensorPlugins() const
+{
+    Loader& l = Loader::instance();
+    return l.availableSensorPlugins();
+}
+
 int SensorManager::requestSensor(const QString& id)
 {
     sensordLogD() << "Requesting sensor:" << id;

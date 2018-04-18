@@ -31,13 +31,19 @@
 #include <QPluginLoader>
 #include <QStringList>
 #include <QList>
+#include <QDir>
 #include <QCoreApplication>
 
 #include "logging.h"
 #include "config.h"
 
+#ifdef USE_SSUSYSINFO
+# include <ssusysinfo/ssusysinfo.h>
+#endif
+
 Loader::Loader()
 {
+    scanAvailablePlugins();
 }
 
 Loader& Loader::instance()
@@ -47,99 +53,183 @@ Loader& Loader::instance()
     return the_loader;
 }
 
-bool Loader::loadPluginFile(const QString& name, QString *errorString, QStringList& newPluginNames, QList<PluginBase*>& newPlugins) const
+#define PLUGIN_PREFIX_ENV "SENSORFW_LIBRARY_PATH"
+#define PLUGIN_DIRECTORY  "/usr/lib/sensord-qt5"
+#define PLUGIN_PREFIX     "lib"
+#define PLUGIN_SUFFIX     "-qt5.so"
+#define SENSOR_SUFFIX     "sensor"
+
+static QString getPluginDirectory()
 {
-    sensordLogT() << "Loading plugin:" << name;
+    QByteArray env = qgetenv(PLUGIN_PREFIX_ENV);
+    return QString::fromUtf8(env + PLUGIN_DIRECTORY);
+}
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    QString pluginPath = QString::fromLatin1("/usr/lib/sensord/lib%1.so").arg(name);
-#else
-    QString pluginPath;
-    QByteArray env = qgetenv("SENSORFW_LIBRARY_PATH");
-    if (env.isEmpty())
-        pluginPath = QString::fromLatin1("/usr/lib/sensord-qt5/lib%1-qt5.so").arg(name);
-    else
-        pluginPath = QString::fromLatin1(env+"/usr/lib/sensord-qt5/lib%1-qt5.so").arg(name);
+static QString getPluginPath(const QString &name)
+{
+    return QString("%1/" PLUGIN_PREFIX "%2" PLUGIN_SUFFIX).arg(getPluginDirectory()).arg(name);
+}
 
-#endif
-
-    QPluginLoader qpl(pluginPath);
+bool Loader::loadPluginFile(const QString &name, QString &errorString, QStringList &stack)
+{
+    const QString resolvedName(resolveRealPluginName(name));
+    QPluginLoader qpl(getPluginPath(resolvedName));
     qpl.setLoadHints(QLibrary::ExportExternalSymbolsHint);
-    if (!qpl.load()) {
-        *errorString = qpl.errorString();
-        sensordLogC() << "plugin loading error: " << *errorString;
-        return false;
-    }
-
-    QObject* object = qpl.instance();
-    if (!object) {
-        *errorString = "not able to instanciate";
-        sensordLogC() << "plugin loading error: " << *errorString;
-        return false;
-    }
-
-    PluginBase* plugin = qobject_cast<PluginBase*>(object);
-    if (!plugin) {
-        *errorString = "not a Plugin type";
-        sensordLogC() << "plugin loading error: " << *errorString;
-        return false;
-    }
-
-    // Add plugins to the front of the list so they are initialized in reverse order. This will guarantee that dependencies are initialized first for each plugin.
-    newPluginNames.prepend(name);
-    newPlugins.prepend(plugin);
-
-    // Get dependencies
-    QStringList requiredPlugins(plugin->Dependencies());
-    sensordLogT() << name << " requires: " << requiredPlugins;
-
-    bool loaded = true;
-    for (int i = 0; i < requiredPlugins.size() && loaded; ++i) {
-        if (!(loadedPluginNames_.contains(requiredPlugins.at(i)) ||
-              newPluginNames.contains(requiredPlugins.at(i))))
-        {
-            sensordLogT() << requiredPlugins.at(i) << " is not yet loaded, trying to load.";
-            QString resolvedName = resolveRealPluginName(requiredPlugins.at(i));
-            sensordLogT() << requiredPlugins.at(i) << " resolved as " << resolvedName << ". Loading";
-            loaded = loadPluginFile(resolvedName, errorString, newPluginNames, newPlugins);
+    QObject *object = 0;
+    PluginBase *plugin = 0;
+    sensordLogD() << "Loader loading plugin:" << resolvedName << "as:" << name << "from:" << qpl.fileName();
+    bool loaded = false;
+    bool cyclic = stack.contains(resolvedName);
+    stack.prepend(resolvedName);
+    if (cyclic) {
+        errorString = "cyclic plugin dependency";
+        sensordLogC() << "Plugin has cyclic dependency:" << resolvedName;
+    } else if (loadedPluginNames_.contains(resolvedName)) {
+        sensordLogD() << "Plugin is already loaded:" << resolvedName;
+        loaded = true;
+    } else if (!pluginAvailable(resolvedName)) {
+        errorString = "plugin not available";
+        sensordLogW() << "Plugin not available:" << resolvedName;
+    } else if (!qpl.load()) {
+        errorString = qpl.errorString();
+        sensordLogC() << "Plugin loading error:" << resolvedName << "-" << errorString;
+    } else if (!(object = qpl.instance())) {
+        errorString = "not able to instanciate";
+        sensordLogC() << "Plugin loading error: " << resolvedName << "-" << errorString;
+    } else if (!(plugin = qobject_cast<PluginBase*>(object))) {
+        errorString = "not a Plugin type";
+        sensordLogC() << "Plugin loading error: " << resolvedName << "-" << errorString;
+    } else {
+        loaded = true;
+        QStringList dependencies(plugin->Dependencies());
+        sensordLogD() << resolvedName << "requires:" << dependencies;
+        foreach (const QString &dependency, dependencies) {
+            if (!(loaded = loadPluginFile(dependency, errorString, stack))) {
+                break;
+            }
         }
+        if (loaded) {
+            plugin->Register(*this);
+            loadedPluginNames_.append(resolvedName);
+            plugin->Init(*this);
+        }
+    }
+    stack.removeOne(resolvedName);
+    if (!loaded) {
+        invalidatePlugin(resolvedName);
     }
     return loaded;
 }
 
-bool Loader::loadPlugin(const QString& name, QString* errorString)
+bool Loader::loadPlugin(const QString& name, QString *errorString)
 {
     QString error;
-    bool loaded = false;
-    QStringList newPluginNames;
-    QList<PluginBase*> newPlugins;
-
-    if (loadedPluginNames_.contains(name)) {
-        sensordLogD() << "Plugin already loaded.";
-        return true;
+    QStringList stack;
+    bool loaded = loadPluginFile(name, error, stack);
+    if (!loaded && errorString) {
+        *errorString = error;
     }
-
-    if (loadPluginFile(name, &error, newPluginNames, newPlugins)) {
-
-        // Register newly loaded plugins
-        foreach (PluginBase* base, newPlugins) {
-            base->Register(*this);
-        }
-        loadedPluginNames_.append(newPluginNames);
-        loaded = true;
-
-        // Init newly loaded plugins
-        foreach (PluginBase* base, newPlugins) {
-            base->Init(*this);
-        }
-
-    } else {
-        if(errorString)
-            *errorString = error;
-        loaded = false;
-    }
-
     return loaded;
+}
+
+#ifdef USE_SSUSYSINFO
+static ssusysinfo_t *ssusysinfo = 0;
+#endif
+
+static bool evaluateAvailabilityValue(const QString &name, const QString &val)
+{
+    bool available = true;
+    if (val.startsWith("Feature_")) {
+#ifdef USE_SSUSYSINFO
+        const QStringList features(val.split("|"));
+        bool allow = false;
+        bool deny  = false;
+        foreach(const QString &feature, features) {
+            hw_feature_t id = ssusysinfo_hw_feature_from_name(feature.toUtf8().constData());
+            if (id == Feature_Invalid ) {
+                sensordLogW() << "unknown hw feature:" << feature;
+                continue;
+            }
+            if( ssusysinfo_has_hw_feature(ssusysinfo, id) ) {
+                allow = true;
+                break;
+            }
+            deny = true;
+        }
+        if( deny && !allow ) {
+            sensordLogD() << "plugin disabled in hw-config: " << name << "value" << val;
+            available = false;
+        }
+#else
+        // When compiled without ssu-support, these are enabled by design
+        sensordLogD() << "sensor plugin enabled implicitly: " << name << "value" << val;
+#endif
+    } else if (val == "False") {
+        sensordLogD() << "plugin disabled sensorfwd config: " << name << "value" << val;
+        available = false;
+    } else if (name.endsWith(SENSOR_SUFFIX) && val != "True") {
+        // Warn about implicitly enabled sensor plugins
+        sensordLogW() << "sensor plugin enabled implicitly: " << name << "value" << val;
+    }
+    return available;
+}
+
+void Loader::scanAvailablePlugins()
+{
+#ifdef USE_SSUSYSINFO
+    if (!ssusysinfo) {
+        ssusysinfo = ssusysinfo_create();
+    }
+#endif
+    QStringList res;
+    QDir dir(getPluginDirectory());
+    dir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::NoDot | QDir::NoDotDot);
+    const QString prefix(PLUGIN_PREFIX);
+    const QString suffix(PLUGIN_SUFFIX);
+    foreach (QString file, dir.entryList()) {
+        if (file.startsWith(prefix) && file.endsWith(suffix)) {
+            int beg = prefix.size();
+            int end = file.size() - suffix.size();
+            const QString name(file.mid(beg, end-beg));
+            QString key = QString("available/%1").arg(name);
+            QString val = Config::configuration()->value(key).toString();
+            if( evaluateAvailabilityValue(name, val) ) {
+                res.append(name);
+            }
+        }
+    }
+    availablePluginNames_ = res;
+#ifdef USE_SSUSYSINFO
+    ssusysinfo_delete(ssusysinfo), ssusysinfo = 0;
+#endif
+}
+
+QStringList Loader::availablePlugins() const
+{
+    return availablePluginNames_;
+}
+
+QStringList Loader::availableSensorPlugins() const
+{
+    QStringList res;
+    foreach(const QString &name, availablePluginNames_) {
+        if (name.endsWith(SENSOR_SUFFIX)) {
+            res.append(name);
+        }
+    }
+    return res;
+}
+
+bool Loader::pluginAvailable(const QString &name) const
+{
+    return availablePluginNames_.contains(name);
+}
+
+void Loader::invalidatePlugin(const QString &name)
+{
+    if (availablePluginNames_.removeAll(name) > 0) {
+        sensordLogW() << "plugin marked invalid: " << name;
+    }
 }
 
 QString Loader::resolveRealPluginName(const QString& pluginName) const

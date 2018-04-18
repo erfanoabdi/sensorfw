@@ -50,8 +50,31 @@ public:
      * @param name plugin name.
      * @param errorMessage object to write error message if plugin loading
      *                     fails. If NULL then error message is not written.
+     * @return true on success, false on failure
      */
-    bool loadPlugin(const QString& name, QString* errorMessage = 0);
+    bool loadPlugin(const QString &name, QString *errorMessage = 0);
+
+    /**
+     * Test if a plugin is available for loading
+     *
+     * @param name plugin name
+     * @return true if plugin is available, false if not
+     */
+    bool pluginAvailable(const QString &name) const;
+
+    /**
+     * Get a list of plugins available for loading
+     *
+     * @return Array of plugin names
+     */
+    QStringList availablePlugins() const;
+
+    /**
+     * Get a list of sensor plugins available for loading
+     *
+     * @return Array of plugin names
+     */
+    QStringList availableSensorPlugins() const;
 
 private:
     Loader();
@@ -63,10 +86,11 @@ private:
      *
      * @param name plugin to load.
      * @param errorString object to write error message if plugin loading fails.
-     * @param newPluginNames List of new loaded plugin names.
-     * @param newPlugin List of new loaded plugin objects.
+     * @param stack Pending plugin load stack for detecting circular dependencies.
      */
-    bool loadPluginFile(const QString& name, QString *errorString, QStringList& newPluginNames, QList<PluginBase*>& newPlugins) const;
+    bool loadPluginFile(const QString &name, QString &errorString, QStringList &stack);
+
+    void invalidatePlugin(const QString &name);
 
     /**
      * Resolve plugin name.
@@ -74,9 +98,13 @@ private:
      * @param pluginName plugin name.
      * @return resolved plugin name.
      */
-    QString resolveRealPluginName(const QString& pluginName) const;
+    QString resolveRealPluginName(const QString &pluginName) const;
 
     QStringList loadedPluginNames_; /**< list of loaded plugins */
+
+    QStringList availablePluginNames_; /**< list of loaded plugins */
+
+    void scanAvailablePlugins();
 };
 
 #endif
