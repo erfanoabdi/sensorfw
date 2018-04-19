@@ -50,9 +50,27 @@
 static QtMsgType logLevel;
 static QtMessageHandler previousMessageHandler;
 
+static int normalizeLevel(QtMsgType type)
+{
+    /* Map QtMsgType enum values to something that hopefully
+     * makes sense in less-than / greater-than sense too. */
+    switch (type) {
+    case QtDebugMsg:
+        return 0;
+    case QtInfoMsg:
+        return 1;
+    case QtWarningMsg:
+        return 3;
+    case QtCriticalMsg:
+        return 4;
+    default:
+        return static_cast<int>(type);
+    }
+}
+
 static void messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &str)
 {
-    if (type < logLevel)
+    if (normalizeLevel(type) < normalizeLevel(logLevel))
         return;
 
     previousMessageHandler(type, context, str);
