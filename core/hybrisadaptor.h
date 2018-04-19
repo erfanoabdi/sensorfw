@@ -26,30 +26,13 @@
 #include <QTimer>
 #include <QFile>
 
+#include <pthread.h>
+
 #include "deviceadaptor.h"
 #include <hardware/sensors.h>
 #define SENSORFW_MCE_WATCHER
 
 class HybrisAdaptor;
-
-class HybrisAdaptorReader : public QThread
-{
-    Q_OBJECT
-    Q_DISABLE_COPY(HybrisAdaptorReader)
-
-public:
-
-    HybrisAdaptorReader(QObject *parent);
-    ~HybrisAdaptorReader();
-
-    void run();
-    void stopReader();
-    void startReader();
-
-private:
-    bool running_;
-};
-
 
 class HybrisManager : public QObject
 {
@@ -90,9 +73,11 @@ protected:
     int sensorsCount;
     QMap <int, int> sensorMap; //type, index
     QMap <int, HybrisAdaptor *> registeredAdaptors; //type, obj
-    HybrisAdaptorReader adaptorReader;
-
+    pthread_t adaptorReaderTid;
     friend class HybrisAdaptorReader;
+
+private:
+    static void *adaptorReaderThread(void *aptr);
 };
 
 class HybrisAdaptor : public DeviceAdaptor
@@ -140,7 +125,7 @@ private:
     QList<int> sensorIds;
     unsigned int interval_;
     bool inStandbyMode_;
-    bool running_;
+    volatile bool running_;
     bool shouldBeRunning_;
 
 };
