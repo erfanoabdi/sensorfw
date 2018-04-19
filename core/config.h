@@ -136,7 +136,7 @@ private:
      */
     void clearConfig();
 
-    QList<QSettings*> settings; /**< parsed QSettings */
+    QSettings m_settings; /**< parsed QSettings */
 };
 
 template<typename T>

@@ -104,7 +104,7 @@ equals(QT_MAJOR_VERSION, 5):  {
         DBUSCONFIGFILES.path = /etc/dbus-1/system.d
         INSTALLS += DBUSCONFIGFILES
 
-        SENSORDCONFIGFILES.files = config/90-sensord-default.conf
+        SENSORDCONFIGFILES.files = config/10-sensord-default.conf
         SENSORDCONFIGFILES.path = /etc/sensorfw/sensord.conf.d
         INSTALLS += SENSORDCONFIGFILES
 
