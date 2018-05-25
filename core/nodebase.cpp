@@ -711,36 +711,41 @@ bool NodeBase::setDataRange(const DataRange& range, int sessionId)
 {
     Q_UNUSED(range);
     Q_UNUSED(sessionId);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 bool NodeBase::setStandbyOverride(bool override)
 {
     Q_UNUSED(override);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 unsigned int NodeBase::interval() const
 {
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return 0;
 }
 
 bool NodeBase::setInterval(unsigned int value, int sessionId)
 {
-    sensordLogW() << "setInterval() not implemented in some node using it.";
     Q_UNUSED(value);
     Q_UNUSED(sessionId);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 bool NodeBase::setBufferSize(unsigned int value)
 {
     Q_UNUSED(value);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 bool NodeBase::setBufferInterval(unsigned int value)
 {
     Q_UNUSED(value);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
