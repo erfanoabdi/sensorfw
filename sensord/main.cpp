@@ -1,5 +1,3 @@
-
-
 /**
    @file main.cpp
    @brief Sensord initiation point
@@ -32,13 +30,16 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
+#include <QSocketNotifier>
 
 #include <systemd/sd-daemon.h>
 
+#include <unistd.h>
 #include <signal.h>
 #include <iostream>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "config.h"
 #include "sensormanager.h"
@@ -50,9 +51,27 @@
 static QtMsgType logLevel;
 static QtMessageHandler previousMessageHandler;
 
+static int normalizeLevel(QtMsgType type)
+{
+    /* Map QtMsgType enum values to something that hopefully
+     * makes sense in less-than / greater-than sense too. */
+    switch (type) {
+    case QtDebugMsg:
+        return 0;
+    case QtInfoMsg:
+        return 1;
+    case QtWarningMsg:
+        return 3;
+    case QtCriticalMsg:
+        return 4;
+    default:
+        return static_cast<int>(type);
+    }
+}
+
 static void messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &str)
 {
-    if (type < logLevel)
+    if (normalizeLevel(type) < normalizeLevel(logLevel))
         return;
 
     previousMessageHandler(type, context, str);
@@ -63,11 +82,14 @@ void printUsage();
 void signalUSR1(int param)
 {
     Q_UNUSED(param);
-
-    logLevel = QtMsgType(logLevel + 1);
-    if (logLevel > QtSystemMsg)
+    if (logLevel != QtDebugMsg) {
         logLevel = QtDebugMsg;
-    qDebug() << "New debugging level: " << logLevel;
+        sensordLogW() << "Debug logging enabled";
+    }
+    else {
+        logLevel = QtWarningMsg;
+        sensordLogW() << "Debug logging disabled";
+    }
 }
 
 void signalUSR2(int param)
@@ -87,9 +109,91 @@ void signalUSR2(int param)
 
 void signalINT(int param)
 {
-    Q_UNUSED(param);
+    signal(param, SIG_DFL);
+    sensordLogD() << "Terminating ...";
     QCoreApplication::exit(0);
 }
+
+class SignalNotifier : public QObject
+{
+public:
+     SignalNotifier();
+     ~SignalNotifier();
+private slots:
+     void handleSignalInput(int socket);
+private:
+     static void handleAsyncSignal(int sig);
+     QSocketNotifier *m_socketNotifier;
+     static int s_pipe[2];
+     static const int s_signals[];
+};
+
+SignalNotifier::SignalNotifier()
+    : m_socketNotifier(0)
+{
+    sensordLogD() << "Setup async signal handlers";
+    if (pipe2(s_pipe, O_CLOEXEC) == -1) {
+        qFatal("Failed to create a pipe for signal passunc");
+    }
+    m_socketNotifier = new QSocketNotifier(s_pipe[0], QSocketNotifier::Read, this);
+    connect(m_socketNotifier, &QSocketNotifier::activated,
+            this, &SignalNotifier::handleSignalInput);
+    struct sigaction action;
+    memset(&action, 0, sizeof action);
+    action.sa_handler = handleAsyncSignal;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    for (size_t i = 0; s_signals[i] != -1; ++i )
+        sigaction(s_signals[i], &action, 0);
+}
+
+SignalNotifier::~SignalNotifier()
+{
+    sensordLogD() << "Reset async signal handlers";
+    for (size_t i = 0; s_signals[i] != -1; ++i )
+        signal(s_signals[i], SIG_DFL);
+    delete m_socketNotifier; m_socketNotifier = 0;
+    close(s_pipe[1]), s_pipe[1] = -1;
+    close(s_pipe[0]), s_pipe[0] = -1;
+}
+
+void SignalNotifier::handleAsyncSignal(int sig)
+{
+    /* Can call only async-signal safe functions! */
+    if (write(s_pipe[1], &sig, sizeof sig) == -1) {
+        _exit(EXIT_FAILURE);
+    }
+}
+
+void SignalNotifier::handleSignalInput(int socket)
+{
+    Q_UNUSED(socket);
+    int sig = SIGTERM;
+    uint64_t tmp = 0;
+    if (read(s_pipe[0], &sig, sizeof sig) == -1) {
+        // dontcare
+    }
+    sensordLogD() << "Caught async signal"  << strsignal(sig);
+    switch (sig) {
+    case SIGINT:
+    case SIGTERM:
+        signalINT(sig);
+        break;
+    case SIGUSR1:
+        signalUSR1(sig);
+        break;
+    case SIGUSR2:
+        signalUSR2(sig);
+        break;
+    };
+}
+
+int SignalNotifier::s_pipe[2] = { -1, -1 };
+
+const int SignalNotifier::s_signals[] =
+{
+    SIGINT, SIGTERM, SIGUSR1, SIGUSR2, -1
+};
 
 int main(int argc, char *argv[])
 {
@@ -133,10 +237,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    signal(SIGUSR1, signalUSR1);
-    signal(SIGUSR2, signalUSR2);
-    signal(SIGINT, signalINT);
-    
     if (parser.createDaemon())
     {
         fflush(0);
@@ -182,7 +282,10 @@ int main(int argc, char *argv[])
         sd_notify(0, "READY=1");
     }
 
+    SignalNotifier *signalNotifier = new SignalNotifier();
     int ret = app.exec();
+    delete signalNotifier; signalNotifier = 0;
+
     sensordLogD() << "Exiting...";
     Config::close();
     return ret;

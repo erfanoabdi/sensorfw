@@ -54,16 +54,31 @@ bool SensorManagerAdaptor::loadPlugin(const QString& name)
     return sensorManager()->loadPlugin(name);
 }
 
+QStringList SensorManagerAdaptor::availablePlugins() const
+{
+    return sensorManager()->availablePlugins();
+}
+
+bool SensorManagerAdaptor::pluginAvailable(const QString &name) const
+{
+    return sensorManager()->pluginAvailable(name);
+}
+
+QStringList SensorManagerAdaptor::availableSensorPlugins() const
+{
+    return sensorManager()->availableSensorPlugins();
+}
+
 int SensorManagerAdaptor::requestSensor(const QString &id, qint64 pid)
 {
     int session = sensorManager()->requestSensor(id);
-    sensordLog() << "Sensor '" << id << "' requested. Created session: " << session << ". Client PID: " << pid;
+    sensordLogD() << "Sensor '" << id << "' requested. Created session: " << session << ". Client PID: " << pid;
     return session;
 }
 
 bool SensorManagerAdaptor::releaseSensor(const QString &id, int sessionId, qint64 pid)
 {
-    sensordLog() << "Sensor '" << id << "' release requested for session " << sessionId << ". Client PID: " << pid;
+    sensordLogD() << "Sensor '" << id << "' release requested for session " << sessionId << ". Client PID: " << pid;
     return sensorManager()->releaseSensor(id, sessionId);
 }
 

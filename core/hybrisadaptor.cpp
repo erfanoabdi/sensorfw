@@ -31,6 +31,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <time.h>
+#include <signal.h>
 
 #ifndef SENSOR_TYPE_ACCELEROMETER
 #define SENSOR_TYPE_ACCELEROMETER (1)
@@ -91,7 +93,7 @@ HybrisManager::HybrisManager(QObject *parent)
     , sensorsCount(0)
     , sensorMap()
     , registeredAdaptors()
-    , adaptorReader(parent)
+    , adaptorReaderTid(0)
 {
     init();
 }
@@ -99,6 +101,34 @@ HybrisManager::HybrisManager(QObject *parent)
 HybrisManager::~HybrisManager()
 {
     closeAllSensors();
+    if (adaptorReaderTid) {
+        sensordLogD() << "Canceling hal reader thread";
+        int err = pthread_cancel(adaptorReaderTid);
+        if( err ) {
+            sensordLogC() << "Failed to cancel hal reader thread";
+        }
+        else {
+            sensordLogD() << "Waiting for hal reader thread to exit";
+            void *ret = 0;
+            struct timespec tmo = { 0, 0};
+            clock_gettime(CLOCK_REALTIME, &tmo);
+            tmo.tv_sec += 3;
+            err = pthread_timedjoin_np(adaptorReaderTid, &ret, &tmo);
+            if( err ) {
+                sensordLogC() << "Hal reader thread did not exit";
+            } else {
+                sensordLogD() << "Hal reader thread terminated";
+                adaptorReaderTid = 0;
+            }
+        }
+        if (adaptorReaderTid) {
+            /* The reader thread is stuck at android hal blob.
+             * Continuing would be likely to release resourse
+             * still in active use and lead to segfaulting.
+             * Resort to doing a quick and dirty exit. */
+            _exit(EXIT_FAILURE);
+        }
+    }
 }
 
 HybrisManager *HybrisManager::instance()
@@ -146,6 +176,14 @@ void HybrisManager::init()
         if (use) {
             sensorMap.insert(sensorList[i].type, i);
         }
+    }
+
+    int err = pthread_create(&adaptorReaderTid, 0, adaptorReaderThread, this);
+    if (err) {
+        adaptorReaderTid = 0;
+        sensordLogC() << "Failed to start hal reader thread";
+    } else {
+        sensordLogD() << "Hal reader thread started";
     }
 }
 
@@ -209,8 +247,6 @@ void HybrisManager::startReader(HybrisAdaptor *adaptor)
             sensordLogW() <<Q_FUNC_INFO<< "failed for"<< strerror(-error);
             adaptor->setValid(false);
         }
-        if (!adaptorReader.isRunning())
-            adaptorReader.startReader();
     }
 }
 
@@ -233,10 +269,6 @@ void HybrisManager::stopReader(HybrisAdaptor *adaptor)
         }
     }
     qDebug() << "okToStop" << okToStop;
-
-    if (okToStop) {
-        adaptorReader.stopReader();
-   }
 }
 
 bool HybrisManager::resumeReader(HybrisAdaptor *adaptor)
@@ -466,7 +498,6 @@ void HybrisAdaptor::stopSensor()
     }
 }
 
-
 bool HybrisAdaptor::standby()
 {
     sensordLogD() << "Adaptor '" << id() << "' requested to go to standby"  << "deviceStandbyOverride" << deviceStandbyOverride();
@@ -486,7 +517,6 @@ bool HybrisAdaptor::standby()
 
     return true;
 }
-
 
 bool HybrisAdaptor::resume()
 {
@@ -591,36 +621,6 @@ bool HybrisAdaptor::writeToFile(const QByteArray& path, const QByteArray& conten
     return true;
 }
 
-/*/////////////////////////////////////////////////////////////////////
-/// \brief HybrisAdaptorReader::HybrisAdaptorReader
-/// \param parent
-///
-*/
-
-HybrisAdaptorReader::HybrisAdaptorReader(QObject *parent)
-    : QThread(parent),
-    running_(false)
-{
-}
-
-HybrisAdaptorReader::~HybrisAdaptorReader()
-{
-}
-
-////
-/// \brief HybrisAdaptorReader::stopReader
-///
-void HybrisAdaptorReader::stopReader()
-{
-    running_ = false;
-}
-
-void HybrisAdaptorReader::startReader()
-{
-    running_ = true;
-    start();
-}
-
 static void ObtainTemporaryWakeLock()
 {
     static bool triedToOpen = false;
@@ -644,44 +644,57 @@ static void ObtainTemporaryWakeLock()
     }
 }
 
-void HybrisAdaptorReader::run()
+void *HybrisManager::adaptorReaderThread(void *aptr)
 {
-    int err = 0;
+    HybrisManager *manager = static_cast<HybrisManager *>(aptr);
     static const size_t numEvents = 16;
     sensors_event_t buffer[numEvents];
-    while (running_) {
-        int numberOfEvents = hybrisManager()->device->poll(hybrisManager()->device, buffer, numEvents);
+    /* Async cancellation, but disabled */
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0);
+    /* Leave INT/TERM signal processing up to the main thread */
+    sigset_t ss;
+    sigemptyset(&ss);
+    sigaddset(&ss, SIGINT);
+    sigaddset(&ss, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &ss, 0);
+    /* Loop until explicitly canceled */
+    for( ;; ) {
+        /* Async cancellation point at android hal poll() */
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
+        int numberOfEvents = manager->device->poll(manager->device, buffer, numEvents);
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
+        /* Rate limit in poll() error situations */
         if (numberOfEvents < 0) {
-            sensordLogW() << "poll() failed" << strerror(-err);
-            QThread::msleep(1000);
-        } else {
-            bool blockSuspend = false;
-            bool errorInInput = false;
-
-            for (int i = 0; i < numberOfEvents; i++) {
-                const sensors_event_t& data = buffer[i];
-
-                if (data.version != sizeof(sensors_event_t)) {
-                    sensordLogW()<< QString("incorrect event version (version=%1, expected=%2").arg(data.version).arg(sizeof(sensors_event_t));
-                    errorInInput = true;
-                }
-                if (data.type == SENSOR_TYPE_PROXIMITY) {
-                    blockSuspend = true;
-                }
-                hybrisManager()->processSample(data);
-
+            sensordLogW() << "android device->poll() failed" << strerror(-numberOfEvents);
+            struct timespec ts = { 1, 0 }; // 1000 ms
+            do { } while( nanosleep(&ts, &ts) == -1 && errno == EINTR );
+            continue;
+        }
+        /* Process received events */
+        bool blockSuspend = false;
+        bool errorInInput = false;
+        for (int i = 0; i < numberOfEvents; i++) {
+            const sensors_event_t& data = buffer[i];
+            if (data.version != sizeof(sensors_event_t)) {
+                sensordLogW()<< QString("incorrect event version (version=%1, expected=%2").arg(data.version).arg(sizeof(sensors_event_t));
+                errorInInput = true;
             }
-
-            if (blockSuspend) {
-                ObtainTemporaryWakeLock();
+            if (data.type == SENSOR_TYPE_PROXIMITY) {
+                blockSuspend = true;
             }
-
-            if (errorInInput)
-                QThread::msleep(50);
+            // FIXME: is this thread safe?
+            manager->processSample(data);
+        }
+        /* Suspend proof sensor reporting that could occur in display off */
+        if (blockSuspend) {
+            ObtainTemporaryWakeLock();
+        }
+        /* Rate limit after receiving erraneous events */
+        if (errorInInput) {
+            struct timespec ts = { 0, 50 * 1000 * 1000 }; // 50 ms
+            do { } while( nanosleep(&ts, &ts) == -1 && errno == EINTR );
         }
     }
-    sensordLogT() << Q_FUNC_INFO << "runner thread end";
-
+    return 0;
 }
-
-////////////////////////////////////////////////////////

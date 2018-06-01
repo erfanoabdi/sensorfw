@@ -694,9 +694,9 @@ Sensorfw supports multiple configuration files. There are two locations:
   (1) /etc/sensorfw/sensord.conf
   (2) /etc/sensorfw/sensord.conf.d/
 
-Any option set in (1) will override options set in any of the files in (2). Files in (2) are given
-priority based on alphanumeric order. Using double-digits as the beginning of the filename for
-clarity is encouraged.
+Any option set in (1) will override options set in any of the files in (2). Files in (2) are
+processed in alpha-numerical order, and later files can override settings from earlier files.
+Using double-digits as the beginning of the filename for clarity is encouraged.
 
 Configuration files contain sections for different HW. These sections should connect plugin
 metanames (sampleadaptor) with the real plugin that should be used (sampleadaptor-inputdev).

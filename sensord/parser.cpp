@@ -56,8 +56,10 @@ void Parser::parsingCommandLine(QStringList arguments)
         {
             data = opt.split("=");
             QString logLevel = data.at(1);
-            if (logLevel == "test" || logLevel == "debug")
+            if (logLevel == "test")
                 logLevel_ = QtDebugMsg;
+            else if (logLevel == "debug")
+                logLevel_ = QtInfoMsg;
             else if (logLevel == "warning")
                 logLevel_ = QtWarningMsg;
             else if (logLevel == "critical")

@@ -80,7 +80,7 @@ void NodeBase::introduceAvailableDataRange(const DataRange& range)
 {
     if (!m_dataRangeList.contains(range))
     {
-        sensordLogD() << "Introduced new data range: " << range.min << "-" << range.max << ", " << range.resolution;
+        sensordLogD() << "Introduced new data range for '" << id_ << "':" << range.min << "-" << range.max << "," << range.resolution;
         m_dataRangeList.append(range);
     }
 }
@@ -273,7 +273,7 @@ void NodeBase::introduceAvailableInterval(const DataRange& interval)
 {
     if (!m_intervalList.contains(interval))
     {
-        sensordLogD() << "Introduced new interval: " << interval.min << "-" << interval.max;
+        sensordLogD() << "Introduced new interval for '" << id_ << "':" << interval.min << "-" << interval.max;
         m_intervalList.append(interval);
     }
 }
@@ -375,7 +375,7 @@ bool NodeBase::standbyOverride() const
 
 bool NodeBase::setStandbyOverrideRequest(const int sessionId, const bool override)
 {
-    sensordLogD() << sessionId << " requested standbyoverride for '" << id() << "' :" << override;
+    sensordLogD() << sessionId << "requested standbyoverride for '" << id() << "' :" << override;
     // Only store true requests, id is enough, no need for value
     if (override == false)
     {
@@ -459,7 +459,7 @@ bool NodeBase::setDefaultInterval(const unsigned int value)
 {
     if (!isValidIntervalRequest(value))
     {
-        sensordLogW() << "Attempting to define invalid default data rate: " << value;
+        sensordLogW() << "Attempting to define invalid default data rate:" << value;
         return false;
     }
     m_defaultInterval = value;
@@ -711,36 +711,41 @@ bool NodeBase::setDataRange(const DataRange& range, int sessionId)
 {
     Q_UNUSED(range);
     Q_UNUSED(sessionId);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 bool NodeBase::setStandbyOverride(bool override)
 {
     Q_UNUSED(override);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 unsigned int NodeBase::interval() const
 {
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return 0;
 }
 
 bool NodeBase::setInterval(unsigned int value, int sessionId)
 {
-    sensordLogW() << "setInterval() not implemented in some node using it.";
     Q_UNUSED(value);
     Q_UNUSED(sessionId);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 bool NodeBase::setBufferSize(unsigned int value)
 {
     Q_UNUSED(value);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }
 
 bool NodeBase::setBufferInterval(unsigned int value)
 {
     Q_UNUSED(value);
+    sensordLogD() << __func__ << "not implemented in some node using it.";
     return false;
 }

@@ -39,94 +39,68 @@ Config::Config() {
 }
 
 Config::~Config() {
-    clearConfig();
 }
 
 void Config::clearConfig() {
-    foreach(QSettings* setting, settings)
-        delete setting;
-    settings.clear();
+    m_settings.clear();
 }
 
 bool Config::loadConfig(const QString &defConfigPath, const QString &configDPath) {
-    Config *config = NULL;
+    /* Not having config files is ok, failing to load one that exists is not */
     bool ret = true;
-
-    /* Check/create new static config */
-    if (static_configuration) {
-        config = static_configuration;
-    } else {
-        config = new Config();
+    if (!static_configuration) {
+        static_configuration = new Config();
     }
-
-    if (!config->loadConfigFile(defConfigPath))
-        ret = false;
-
-    /* Scan config.d dir */
-    QStringList fileList;
-    if(!configDPath.isEmpty())
-    {
+    /* Process config.d dir in alnum order */
+    if (!configDPath.isEmpty()) {
         QDir dir(configDPath, "*.conf", QDir::Name, QDir::Files);
-        fileList = dir.entryList();
-        foreach(const QString& file, fileList)
-        {
-            if (!config->loadConfigFile(dir.absoluteFilePath(file)))
+        foreach(const QString &file, dir.entryList()) {
+            if (!static_configuration->loadConfigFile(dir.absoluteFilePath(file))) {
                 ret = false;
+            }
         }
     }
-
-    static_configuration = config;
-
+    /* Primary config file overrides config.d */
+    if (!defConfigPath.isEmpty() && QFile::exists(defConfigPath) ) {
+        if (!static_configuration->loadConfigFile(defConfigPath))
+            ret = false;
+    }
     return ret;
 }
 
 bool Config::loadConfigFile(const QString &configFileName) {
-    if(!QFile::exists(configFileName))
-    {
+    /* Success means the file was loaded and processed without hiccups */
+    bool loaded = false;
+    if (!QFile::exists(configFileName)) {
         sensordLogW() << "File does not exists \"" << configFileName <<  "\"";
-        return false;
+    } else {
+        QSettings merge(configFileName, QSettings::IniFormat);
+        QSettings::Status status(merge.status());
+        if (status == QSettings::FormatError ) {
+            sensordLogW() << "Configuration file \"" << configFileName <<  "\" is in wrong format";
+        } else if (status != QSettings::NoError) {
+            sensordLogW() << "Unable to open \"" << configFileName <<  "\" configuration file";
+        } else {
+            foreach (const QString &key, merge.allKeys()) {
+                m_settings.setValue(key, merge.value(key));
+            }
+            loaded = true;
+        }
     }
-    QSettings* setting = new QSettings(configFileName, QSettings::IniFormat);
-    if(setting->status() == QSettings::NoError) {
-        settings.append(setting);
-        sensordLogD() << "Config file \"" << configFileName << "\" successfully loaded";
-        return true;
-    }
-    else if(setting->status() == QSettings::AccessError)
-        sensordLogW() << "Unable to open \"" << configFileName <<  "\" configuration file";
-    else if(setting->status() == QSettings::FormatError)
-        sensordLogW() << "Configuration file \"" << configFileName <<  "\" is in wrong format";
-    else
-        sensordLogW() << "Configuration file \"" << configFileName <<  "\" parsing failed to unknown error: " << setting->status();
-    delete setting;
-    return false;
+    return loaded;
 }
 
 QVariant Config::value(const QString &key) const {
-    /* Iterate through configs so that keys in the first files
-     * have preference over the last.
-     */
-    foreach(QSettings* setting, settings) {
-        if(setting->contains(key))
-        {
-            QVariant var = setting->value(key, QVariant());
-            if(var.isValid())
-                sensordLogD() << "Value for key '" << key << "': " << var.toString();
-            return var;
-        }
+    QVariant var = m_settings.value(key, QVariant());
+    if(var.isValid()) {
+        sensordLogT() << "Value for key" << key << ":" << var.toString();
     }
-    return QVariant();
+    return var;
 }
 
 QStringList Config::groups() const
 {
-    QStringList groups;
-    foreach(QSettings* setting, settings) {
-        foreach(const QString& group, setting->childGroups()) {
-            if(!groups.contains(group))
-                groups << group;
-        }
-    }
+    QStringList groups = m_settings.childGroups();
     return groups;
 }
 

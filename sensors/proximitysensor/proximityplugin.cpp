@@ -30,7 +30,7 @@
 
 void ProximityPlugin::Register(class Loader&)
 {
-    sensordLog() << "registering proximitysensor";
+    sensordLogD() << "registering proximitysensor";
     SensorManager& sm = SensorManager::instance();
     sm.registerSensor<ProximitySensorChannel>("proximitysensor");
 }

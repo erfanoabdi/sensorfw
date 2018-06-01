@@ -21,6 +21,7 @@ BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  pkgconfig(Qt5Test)
 BuildRequires:  pkgconfig(mlite5)
 BuildRequires:  pkgconfig(libsystemd)
+BuildRequires:  pkgconfig(ssu-sysinfo)
 BuildRequires:  doxygen
 BuildRequires:  systemd
 BuildRequires:  libudev-devel
@@ -94,6 +95,7 @@ export LD_RUN_PATH=/usr/lib/sensord-qt5/
 export QT_SELECT=5
 
 %qmake5  \
+    CONFIG+=ssusysinfo\
     CONFIG+=mce
 
 make %{?_smp_mflags}

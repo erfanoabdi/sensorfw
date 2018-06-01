@@ -88,6 +88,27 @@ public Q_SLOTS:
     bool loadPlugin(const QString& name);
 
     /**
+     * Test if a plugin is available
+     *
+     * @return true if plugin exists, false otherwise
+     */
+    bool pluginAvailable(const QString& name) const;
+
+    /**
+     * List all available plugins.
+     *
+     * @return array of plugin names
+     */
+    QStringList availablePlugins() const;
+
+    /**
+     * List available sensor plugins.
+     *
+     * @return array of plugin names
+     */
+    QStringList availableSensorPlugins() const;
+
+    /**
      * Request new sensor session to be created.
      *
      * @param id Sensor ID.

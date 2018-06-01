@@ -30,9 +30,8 @@
 #include <QDebug>
 
 #define sensordLogT() (qDebug())
-#define sensordLogD() (qDebug())
+#define sensordLogD() (qInfo())
 #define sensordLogW() (qWarning())
 #define sensordLogC() (qCritical())
-#define sensordLog() (qDebug())
 
 #endif //LOGGING_H

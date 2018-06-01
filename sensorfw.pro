@@ -1,5 +1,17 @@
-load(configure)
-qtCompileTest(hybris)
+# RPM build: Hybris plugin has separate spec file that does:
+#   qmake CONFIG+=hybris
+# And pro-file behavioral differences are handled via:
+#   contains(CONFIG,hybris)  { ... }
+#
+# Debian builds: debian/rules triggers build time hybris check:
+#   qmake CONFIG+=autohybris
+# And pro-file behavioral differences are handled via:
+#   config_hybris { ... }
+
+contains(CONFIG,autohybris) {
+    load(configure)
+    qtCompileTest(hybris)
+}
 
 TEMPLATE = subdirs
 CONFIG += ordered
@@ -92,7 +104,8 @@ equals(QT_MAJOR_VERSION, 5):  {
         DBUSCONFIGFILES.path = /etc/dbus-1/system.d
         INSTALLS += DBUSCONFIGFILES
 
-        SENSORDCONFIGFILES.files = config/90-sensord-default.conf
+        SENSORDCONFIGFILES.files  = config/10-sensord-default.conf
+        SENSORDCONFIGFILES.files += config/20-sensors-default.conf
         SENSORDCONFIGFILES.path = /etc/sensorfw/sensord.conf.d
         INSTALLS += SENSORDCONFIGFILES
 
