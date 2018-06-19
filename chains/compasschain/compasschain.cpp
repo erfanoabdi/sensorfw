@@ -178,6 +178,9 @@ CompassChain::CompassChain(const QString& id) :
 
         addStandbyOverrideSource(accelerometerChain);
         setIntervalSource(accelerometerChain);
+    } else {
+      addStandbyOverrideSource(orientAdaptor);
+      setIntervalSource(orientAdaptor);
     }
 }
 
