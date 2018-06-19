@@ -205,9 +205,13 @@ int HybrisManager::maxRange(int sensorType)
 
 int HybrisManager::minDelay(int sensorType)
 {
-    if (sensorMap.contains(sensorType))
-        return sensorList[sensorMap[sensorType]].minDelay;
-    return 0;
+    int res = 0;
+    if (sensorMap.contains(sensorType)) {
+        res = sensorList[sensorMap[sensorType]].minDelay;
+        // us -> ms, round up
+        res = (res + 999) / 1000;
+    }
+    return res;
 }
 
 int HybrisManager::resolution(int sensorType)
