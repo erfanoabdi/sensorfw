@@ -90,7 +90,7 @@
 static char const *
 sensorTypeName(int type)
 {
-    switch(type) {
+    switch (type) {
     case SENSOR_TYPE_META_DATA:                   return "META_DATA";
     case SENSOR_TYPE_ACCELEROMETER:               return "ACCELEROMETER";
     case SENSOR_TYPE_GEOMAGNETIC_FIELD:           return "GEOMAGNETIC_FIELD";
@@ -158,6 +158,7 @@ HybrisSensorState::HybrisSensorState()
     , m_delay(-1)
     , m_active(-1)
 {
+    memset(&m_fallbackEvent, 0, sizeof m_fallbackEvent);
 }
 
 HybrisSensorState::~HybrisSensorState()
@@ -263,6 +264,30 @@ HybrisManager::HybrisManager(QObject *parent)
             }
             m_halIndexOfType.insert(m_halSensorArray[i].type, i);
 
+            /* Set sane fallback values for select sensors in case the
+             * hal does not report initial values. */
+            sensors_event_t *eve = &m_halSensorState[i].m_fallbackEvent;
+            eve->version = sizeof *eve;
+            eve->sensor  = m_halSensorArray[i].handle;
+            eve->type    = m_halSensorArray[i].type;
+
+            switch (m_halSensorArray[i].type) {
+            case SENSOR_TYPE_LIGHT:
+                // Roughly indoor lightning
+                eve->light = 400;
+                break;
+
+            case SENSOR_TYPE_PROXIMITY:
+                // Not-covered
+                eve->distance = m_halSensorArray[i].maxRange;
+                break;
+            default:
+                eve->sensor  = 0;
+                eve->type    = 0;
+                break;
+            }
+        }
+
         /* Make sure all sensors are initially in stopped state */
         halSetActive(m_halSensorArray[i].handle, false);
     }
@@ -335,6 +360,16 @@ int HybrisManager::halHandleForType(int sensorType) const
 {
     int index = halIndexForType(sensorType);
     return (index < 0) ? -1 : m_halSensorArray[index].handle;
+}
+
+sensors_event_t *HybrisManager::halEventForHandle(int handle) const
+{
+    sensors_event_t *event = 0;
+    int index = halIndexForHandle(handle);
+    if (index != -1) {
+        event = &m_halSensorState[index].m_fallbackEvent;
+    }
+    return event;
 }
 
 int HybrisManager::halIndexForHandle(int handle) const
@@ -572,7 +607,7 @@ void *HybrisManager::halEventReaderThread(void *aptr)
     sigaddset(&ss, SIGTERM);
     pthread_sigmask(SIG_BLOCK, &ss, 0);
     /* Loop until explicitly canceled */
-    for( ;; ) {
+    for (;;) {
         /* Async cancellation point at android hal poll() */
         pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
         int numberOfEvents = manager->m_halDevice->poll(manager->m_halDevice, buffer, numEvents);
@@ -591,6 +626,12 @@ void *HybrisManager::halEventReaderThread(void *aptr)
             const sensors_event_t& data = buffer[i];
 
             sensordLogT("HYBRIS EVE %s", sensorTypeName(data.type));
+
+            /* Got data -> Clear the no longer needed fallback event */
+            sensors_event_t *fallback = manager->halEventForHandle(data.sensor);
+            if (fallback && fallback->type == data.type && fallback->sensor == data.sensor) {
+                fallback->type = fallback->sensor = 0;
+            }
 
             if (data.version != sizeof(sensors_event_t)) {
                 sensordLogW()<< QString("incorrect event version (version=%1, expected=%2").arg(data.version).arg(sizeof(sensors_event_t));
@@ -720,6 +761,16 @@ bool HybrisAdaptor::setInterval(const unsigned int value, const int sessionId)
     if (!ok) {
         sensordLogW() << Q_FUNC_INFO << "setInterval not ok";
     } else {
+        /* If we have not yet received sensor data, apply fallback value */
+        sensors_event_t *fallback = hybrisManager()->halEventForHandle(m_sensorHandle);
+        if (fallback && fallback->sensor == m_sensorHandle && fallback->type == m_sensorType) {
+            sensordLogT("HYBRIS FALLBACK type:%s sensor:%d",
+                        sensorTypeName(fallback->type),
+                        fallback->sensor);
+            processSample(*fallback);
+            fallback->sensor = fallback->type = 0;
+        }
+
         sendInitialData();
     }
 
@@ -795,6 +846,16 @@ void HybrisAdaptor::evaluateSensor()
             hybrisManager()->startReader(this);
             if (entry->addReference() == 1) {
                 entry->setIsRunning(true);
+            }
+
+            /* If we have not yet received sensor data, apply fallback value */
+            sensors_event_t *fallback = hybrisManager()->halEventForHandle(m_sensorHandle);
+            if (fallback && fallback->sensor == m_sensorHandle && fallback->type == m_sensorType) {
+                sensordLogT("HYBRIS FALLBACK type:%s sensor:%d",
+                            sensorTypeName(fallback->type),
+                            fallback->sensor);
+                processSample(*fallback);
+                fallback->sensor = fallback->type = 0;
             }
         } else {
             if (entry->removeReference() == 0) {

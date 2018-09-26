@@ -43,6 +43,7 @@ struct HybrisSensorState
     int  m_maxDelay;
     int  m_delay;
     int  m_active;
+    sensors_event_t m_fallbackEvent;
 };
 
 class HybrisManager : public QObject
@@ -58,6 +59,7 @@ public:
      * android sensor hal functions
      * - - - - - - - - - - - - - - - - - - - */
 
+    sensors_event_t *halEventForHandle(int handle) const;
     int              halIndexForHandle(int handle) const;
     int              halIndexForType  (int sensorType) const;
     int              halHandleForType (int sensorType) const;
