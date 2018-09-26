@@ -138,7 +138,7 @@ void HybrisProximityAdaptor::processSample(const sensors_event_t& data)
     ProximityData *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
     bool near = false;
-    if (data.distance < maxRange) {
+    if (data.distance < maxRange()) {
         near = true;
     }
     d->withinProximity_ = near;

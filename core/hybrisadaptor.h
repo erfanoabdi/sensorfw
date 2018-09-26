@@ -34,50 +34,68 @@
 
 class HybrisAdaptor;
 
+struct HybrisSensorState
+{
+    HybrisSensorState();
+    ~HybrisSensorState();
+
+    int  m_minDelay;
+    int  m_maxDelay;
+    int  m_delay;
+    int  m_active;
+};
+
 class HybrisManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit HybrisManager(QObject *parent = 0);
     static HybrisManager *instance();
+
+    explicit HybrisManager(QObject *parent = 0);
     virtual ~HybrisManager();
 
-    int handleForType(int sensorType);
-    int maxRange(int sensorType);
-    int minDelay(int sensorType);
-    int resolution(int sensorType);
+    /* - - - - - - - - - - - - - - - - - - - *
+     * android sensor hal functions
+     * - - - - - - - - - - - - - - - - - - - */
 
-    bool setDelay(int handle, int interval);
-    void startReader(HybrisAdaptor *adaptor);
-    void stopReader(HybrisAdaptor *adaptor);
+    int              halIndexForHandle(int handle) const;
+    int              halIndexForType  (int sensorType) const;
+    int              halHandleForType (int sensorType) const;
+    float            halGetMaxRange   (int handle) const;
+    float            halGetResolution (int handle) const;
+    int              halGetMinDelay   (int handle) const;
+    int              halGetMaxDelay   (int handle) const;
+    int              halGetDelay      (int handle) const;
+    bool             halSetDelay      (int handle, int delay_ms);
+    bool             halGetActive     (int handle) const;
+    bool             halSetActive     (int handle, bool active);
 
-    bool resumeReader(HybrisAdaptor *adaptor);
-    void standbyReader(HybrisAdaptor *adaptor);
+    /* - - - - - - - - - - - - - - - - - - - *
+     * HybrisManager <--> sensorfwd
+     * - - - - - - - - - - - - - - - - - - - */
 
-    bool openSensors();
-    bool closeSensors();
+    void startReader     (HybrisAdaptor *adaptor);
+    void stopReader      (HybrisAdaptor *adaptor);
+    void registerAdaptor (HybrisAdaptor * adaptor);
+    void processSample   (const sensors_event_t& data);
 
-    void registerAdaptor(HybrisAdaptor * adaptor);
-
-    void processSample(const sensors_event_t& data);
-
-protected:
-    // methods
-    void init();
-    void closeAllSensors();
-
+private:
     // fields
-    struct sensors_poll_device_t* device;
-    struct sensor_t const* sensorList;
-    struct sensors_module_t* module;
-    int sensorsCount;
-    QMap <int, int> sensorMap; //type, index
-    QMap <int, HybrisAdaptor *> registeredAdaptors; //type, obj
-    pthread_t adaptorReaderTid;
+    bool                          m_initialized;
+    QMap <int, HybrisAdaptor *>   m_registeredAdaptors; // type -> obj
+    struct sensors_module_t      *m_halModule;
+    struct sensors_poll_device_t *m_halDevice;
+    int                           m_halSensorCount;
+    const struct sensor_t        *m_halSensorArray;   // [m_halSensorCount]
+    HybrisSensorState            *m_halSensorState;   // [m_halSensorCount]
+    QMap <int, int>               m_halIndexOfType;   // type   -> index
+    QMap <int, int>               m_halIndexOfHandle; // handle -> index
+    pthread_t                     m_halEventReaderTid;
+
     friend class HybrisAdaptorReader;
 
 private:
-    static void *adaptorReaderThread(void *aptr);
+    static void *halEventReaderThread(void *aptr);
 };
 
 class HybrisAdaptor : public DeviceAdaptor
@@ -87,31 +105,31 @@ public:
     virtual ~HybrisAdaptor();
 
     virtual void init();
-    bool addSensorType(int type);
+
     virtual bool startAdaptor();
-    bool isRunning() const;
+    bool         isRunning() const;
     virtual void stopAdaptor();
 
+    void         evaluateSensor();
     virtual bool startSensor();
     virtual void stopSensor();
 
     virtual bool standby();
-
     virtual bool resume();
 
-    qreal maxRange;
-    qint32 minDelay;
-    qreal resolution;
+    virtual void sendInitialData();
 
     friend class HybrisManager;
-    int sensorHandle;
-    int sensorType;
-    int cachedInterval;
-
-    virtual void sendInitialData() {}
 
 protected:
     virtual void processSample(const sensors_event_t& data) = 0;
+
+    qreal        minRange() const;
+    qreal        maxRange() const;
+    qreal        resolution() const;
+
+    unsigned int minInterval() const;
+    unsigned int maxInterval() const;
 
     virtual unsigned int interval() const;
     virtual bool setInterval(const unsigned int value, const int sessionId);
@@ -119,15 +137,12 @@ protected:
     static bool writeToFile(const QByteArray& path, const QByteArray& content);
 
 private:
-    void stopReaderThread();
-    bool startReaderThread();
+    bool          m_inStandbyMode;
+    volatile bool m_isRunning;
+    bool          m_shouldBeRunning;
 
-    QList<int> sensorIds;
-    unsigned int interval_;
-    bool inStandbyMode_;
-    volatile bool running_;
-    bool shouldBeRunning_;
-
+    int           m_sensorHandle;
+    int           m_sensorType;
 };
 
 #endif // HybrisAdaptor_H
