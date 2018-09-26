@@ -29,9 +29,9 @@
 
 #include <QDebug>
 
-#define sensordLogT() (qDebug())
-#define sensordLogD() (qInfo())
-#define sensordLogW() (qWarning())
-#define sensordLogC() (qCritical())
+#define sensordLogT(ARGS_...) (qDebug(ARGS_))
+#define sensordLogD(ARGS_...) (qInfo(ARGS_))
+#define sensordLogW(ARGS_...) (qWarning(ARGS_))
+#define sensordLogC(ARGS_...) (qCritical(ARGS_))
 
 #endif //LOGGING_H
