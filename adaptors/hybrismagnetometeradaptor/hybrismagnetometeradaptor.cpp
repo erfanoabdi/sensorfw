@@ -48,20 +48,19 @@ HybrisMagnetometerAdaptor::~HybrisMagnetometerAdaptor()
 
 bool HybrisMagnetometerAdaptor::startSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
-
+    if (isRunning() &&!powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     sensordLogD() << "HybrisMagnetometerAdaptor start\n";
     return true;
 }
 
 void HybrisMagnetometerAdaptor::stopSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
+    if (!isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     sensordLogD() << "HybrisMagnetometerAdaptor stop\n";
 }
 

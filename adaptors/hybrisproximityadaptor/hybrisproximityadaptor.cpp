@@ -57,10 +57,10 @@ HybrisProximityAdaptor::~HybrisProximityAdaptor()
 
 bool HybrisProximityAdaptor::startSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
+    if (isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     sensordLogD() << "HybrisProximityAdaptor start\n";
     return true;
 }
@@ -127,9 +127,9 @@ void HybrisProximityAdaptor::sendInitialData()
 
 void HybrisProximityAdaptor::stopSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
+    if (!isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     sensordLogD() << "HybrisProximityAdaptor stop\n";
 }
 

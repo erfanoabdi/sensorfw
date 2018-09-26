@@ -809,6 +809,7 @@ void HybrisAdaptor::evaluateSensor()
 
 bool HybrisAdaptor::startSensor()
 {
+    // Note: This is overloaded and called by each HybrisXxxAdaptor::startSensor()
     if (!m_shouldBeRunning) {
         m_shouldBeRunning = true;
         sensordLogT("%s m_shouldBeRunning = %d", sensorTypeName(m_sensorType), m_shouldBeRunning);
@@ -819,6 +820,7 @@ bool HybrisAdaptor::startSensor()
 
 void HybrisAdaptor::stopSensor()
 {
+    // Note: This is overloaded and called by each HybrisXxxAdaptor::stopSensor()
     if (m_shouldBeRunning) {
         m_shouldBeRunning = false;
         sensordLogT("%s m_shouldBeRunning = %d", sensorTypeName(m_sensorType), m_shouldBeRunning);
