@@ -64,20 +64,19 @@ HybrisOrientationAdaptor::~HybrisOrientationAdaptor()
 
 bool HybrisOrientationAdaptor::startSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
-
+    if (isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     sensordLogD() << "Hybris OrientationAdaptor start\n";
     return true;
 }
 
 void HybrisOrientationAdaptor::stopSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
+    if (!isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     sensordLogD() << "Hybris OrientationAdaptor stop\n";
 }
 

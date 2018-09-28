@@ -57,10 +57,10 @@ HybrisProximityAdaptor::~HybrisProximityAdaptor()
 
 bool HybrisProximityAdaptor::startSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
+    if (isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     sensordLogD() << "HybrisProximityAdaptor start\n";
     return true;
 }
@@ -127,9 +127,9 @@ void HybrisProximityAdaptor::sendInitialData()
 
 void HybrisProximityAdaptor::stopSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
+    if (!isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     sensordLogD() << "HybrisProximityAdaptor stop\n";
 }
 
@@ -138,7 +138,7 @@ void HybrisProximityAdaptor::processSample(const sensors_event_t& data)
     ProximityData *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
     bool near = false;
-    if (data.distance < maxRange) {
+    if (data.distance < maxRange()) {
         near = true;
     }
     d->withinProximity_ = near;

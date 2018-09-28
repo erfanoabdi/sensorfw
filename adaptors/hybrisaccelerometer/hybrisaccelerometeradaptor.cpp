@@ -44,20 +44,19 @@ HybrisAccelerometerAdaptor::~HybrisAccelerometerAdaptor()
 
 bool HybrisAccelerometerAdaptor::startSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
-
+    if (isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     sensordLogD() << "Hybris AccelAdaptor start\n";
     return true;
 }
 
 void HybrisAccelerometerAdaptor::stopSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
+    if (!isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     sensordLogD() << "Hybris AccelAdaptor stop\n";
 }
 

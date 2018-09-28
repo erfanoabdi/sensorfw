@@ -52,11 +52,10 @@ HybrisAlsAdaptor::~HybrisAlsAdaptor()
 
 bool HybrisAlsAdaptor::startSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
-
+    if (isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     sensordLogD() << "Hybris HybrisAlsAdaptor start\n";
     return true;
 }
@@ -120,9 +119,9 @@ void HybrisAlsAdaptor::sendInitialData()
 
 void HybrisAlsAdaptor::stopSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
+    if (!isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     sensordLogD() << "Hybris HybrisAlsAdaptor stop\n";
 }
 

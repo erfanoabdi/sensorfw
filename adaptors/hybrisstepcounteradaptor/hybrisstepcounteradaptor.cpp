@@ -56,11 +56,10 @@ HybrisStepCounterAdaptor::~HybrisStepCounterAdaptor()
 
 bool HybrisStepCounterAdaptor::startSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "1");
     if (!(HybrisAdaptor::startSensor()))
         return false;
-
+    if (isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "1");
     sensordLogD() << "Hybris HybrisStepCounterAdaptor start\n";
     return true;
 }
@@ -72,9 +71,9 @@ void HybrisStepCounterAdaptor::sendInitialData()
 
 void HybrisStepCounterAdaptor::stopSensor()
 {
-    if(!powerStatePath.isEmpty())
-        writeToFile(powerStatePath, "0");
     HybrisAdaptor::stopSensor();
+    if (!isRunning() && !powerStatePath.isEmpty())
+        writeToFile(powerStatePath, "0");
     sensordLogD() << "Hybris HybrisStepCounterAdaptor stop\n";
 }
 
