@@ -47,10 +47,10 @@
 #define SENSOR_TYPE_ACCELEROMETER                    (1)
 #endif
 #ifndef SENSOR_TYPE_GEOMAGNETIC_FIELD
-#define SENSOR_TYPE_GEOMAGNETIC_FIELD                (2)
+#define SENSOR_TYPE_GEOMAGNETIC_FIELD                (2) // alias for SENSOR_TYPE_MAGNETIC_FIELD
 #endif
 #ifndef SENSOR_TYPE_MAGNETIC_FIELD
-#define SENSOR_TYPE_MAGNETIC_FIELD                   SENSOR_TYPE_GEOMAGNETIC_FIELD
+#define SENSOR_TYPE_MAGNETIC_FIELD                   (2) // alias for SENSOR_TYPE_GEOMAGNETIC_FIELD
 #endif
 #ifndef SENSOR_TYPE_ORIENTATION
 #define SENSOR_TYPE_ORIENTATION                      (3)
