@@ -279,7 +279,24 @@ HybrisManager::HybrisManager(QObject *parent)
         if (use) {
             // min/max delay is specified in [us] -> convert to [ms]
             int minDelay = (m_halSensorArray[i].minDelay + 999) / 1000;
-            int maxDelay = (m_halSensorArray[i].maxDelay + 999) / 1000;
+            int maxDelay = -1; // Assume: not defined by hal
+
+#ifdef SENSORS_DEVICE_API_VERSION_1_3
+            if (m_halDevice->common.version >= SENSORS_DEVICE_API_VERSION_1_3)
+                maxDelay = (m_halSensorArray[i].maxDelay + 999) / 1000;
+#endif
+            /* If HAL does not define maximum delay, we need to invent
+             * something that a) allows sensorfwd logic to see a range
+             * instead of a point, b) is unlikely to be wrong enough to
+             * cause problems...
+             *
+             * For now use: minDelay * 2, but at least 1000 ms.
+             */
+            if (maxDelay < 0 && minDelay > 0) {
+                maxDelay = (minDelay < 500) ? 1000 : (minDelay * 2);
+                sensordLogD("hal does not specify maxDelay, fallback: %d ms",
+                            maxDelay);
+            }
 
             // Positive minDelay means delay /can/ be set - but depending
             // on sensor hal implementation it can also mean that some
@@ -303,6 +320,11 @@ HybrisManager::HybrisManager(QObject *parent)
 
                 halSetActive(m_halSensorArray[i].handle, true);
                 halSetDelay(m_halSensorArray[i].handle, delay);
+
+                sensordLogD("delay = %d [%d, %d]",
+                            m_halSensorState[i].m_delay,
+                            m_halSensorState[i].m_minDelay,
+                            m_halSensorState[i].m_maxDelay);
             }
             m_halIndexOfType.insert(m_halSensorArray[i].type, i);
 
