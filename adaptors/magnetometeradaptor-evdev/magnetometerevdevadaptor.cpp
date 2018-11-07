@@ -42,7 +42,7 @@ MagAdaptorEvdev::MagAdaptorEvdev(const QString& id) :
     magnetometerBuffer_ = new DeviceAdaptorRingBuffer<CalibratedMagneticFieldData>(1);
     setAdaptedSensor("magnetometer", "Internal magnetometer coordinates", magnetometerBuffer_);
     setDescription("Input device magnetometer adaptor");
-    powerStatePath_ = Config::configuration()->value("magnetometer/powerstate_path").toByteArray();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("magnetometer/powerstate_path").toByteArray();
   //  introduceAvailableDataRange(DataRange(0, 4095, 1));
     setDefaultInterval(10);
 }

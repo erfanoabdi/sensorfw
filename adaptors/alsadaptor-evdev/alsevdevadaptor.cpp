@@ -43,7 +43,7 @@ ALSAdaptorEvdev::ALSAdaptorEvdev(const QString& id) :
     alsBuffer_ = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("als", "Internal ambient light sensor lux values", alsBuffer_);
     setDescription("Input device als adaptor");
-    powerStatePath_ = Config::configuration()->value("als/powerstate_path").toByteArray();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("als/powerstate_path").toByteArray();
     introduceAvailableDataRange(DataRange(0, 4095, 1));
     setDefaultInterval(10);
 }

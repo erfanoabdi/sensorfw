@@ -54,16 +54,16 @@ MagCalibrationChain::MagCalibrationChain(const QString& id) :
     if (magAdaptor)
         setValid(magAdaptor->isValid());
 
-// Config::configuration()->value<int>("magnetometer/interval_compensation", 16);
+// SensorFrameworkConfig::configuration()->value<int>("magnetometer/interval_compensation", 16);
     // Get the transformation matrix from config file
-    QString aconvString = Config::configuration()->value<QString>("magnetometer/transformation_matrix", "");
+    QString aconvString = SensorFrameworkConfig::configuration()->value<QString>("magnetometer/transformation_matrix", "");
     if (aconvString.size() > 0) {
         if (!setMatrixFromString(aconvString)) {
             sensordLogW() << "Failed to parse 'transformation_matrix' configuration key. Coordinate alignment may be invalid";
         }
     }
 
-    needsCalibration = Config::configuration()->value<bool>("magnetometer/needs_calibration", true);
+    needsCalibration = SensorFrameworkConfig::configuration()->value<bool>("magnetometer/needs_calibration", true);
 
     calibratedMagnetometerData = new RingBuffer<CalibratedMagneticFieldData>(1);
     nameOutputBuffer("calibratedmagnetometerdata", calibratedMagnetometerData);

@@ -101,7 +101,7 @@ void OrientationBin::startRun()
     start();
     orientationChain->start();
 
-    unsigned int pollInterval = Config::configuration()->value("context/orientation_poll_interval", QVariant(POLL_INTERVAL)).toUInt();
+    unsigned int pollInterval = SensorFrameworkConfig::configuration()->value("context/orientation_poll_interval", QVariant(POLL_INTERVAL)).toUInt();
     orientationChain->setIntervalRequest(sessionId, pollInterval);
 }
 

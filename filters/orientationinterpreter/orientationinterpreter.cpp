@@ -59,13 +59,13 @@ OrientationInterpreter::OrientationInterpreter() :
     addSource(&faceSource, "face");
     addSource(&orientationSource, "orientation");
 
-    minLimit = Config::configuration()->value("orientation/overflow_min", QVariant(OVERFLOW_MIN)).toInt();
-    maxLimit = Config::configuration()->value("orientation/overflow_max", QVariant(OVERFLOW_MAX)).toInt();
+    minLimit = SensorFrameworkConfig::configuration()->value("orientation/overflow_min", QVariant(OVERFLOW_MIN)).toInt();
+    maxLimit = SensorFrameworkConfig::configuration()->value("orientation/overflow_max", QVariant(OVERFLOW_MAX)).toInt();
 
-    angleThresholdPortrait = Config::configuration()->value("orientation/threshold_portrait",QVariant(THRESHOLD_PORTRAIT)).toInt();
-    angleThresholdLandscape = Config::configuration()->value("orientation/threshold_landscape",QVariant(THRESHOLD_LANDSCAPE)).toInt();
-    discardTime = Config::configuration()->value("orientation/discard_time", QVariant(DISCARD_TIME)).toUInt();
-    maxBufferSize = Config::configuration()->value("orientation/buffer_size", QVariant(AVG_BUFFER_MAX_SIZE)).toInt();
+    angleThresholdPortrait = SensorFrameworkConfig::configuration()->value("orientation/threshold_portrait",QVariant(THRESHOLD_PORTRAIT)).toInt();
+    angleThresholdLandscape = SensorFrameworkConfig::configuration()->value("orientation/threshold_landscape",QVariant(THRESHOLD_LANDSCAPE)).toInt();
+    discardTime = SensorFrameworkConfig::configuration()->value("orientation/discard_time", QVariant(DISCARD_TIME)).toUInt();
+    maxBufferSize = SensorFrameworkConfig::configuration()->value("orientation/buffer_size", QVariant(AVG_BUFFER_MAX_SIZE)).toInt();
 
     // Open the handle for boosting cpu on changes that affect orientation
     if (cpuBoostFile.exists()) {

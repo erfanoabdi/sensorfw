@@ -47,7 +47,7 @@ CalibrationFilter::CalibrationFilter() :
     minMaxList.insert(1,qMakePair(0,0));
     minMaxList.insert(2,qMakePair(0,0));
 
-    manualCalibration = Config::configuration()->value<bool>("magnetometer/needs_calibration", false);
+    manualCalibration = SensorFrameworkConfig::configuration()->value<bool>("magnetometer/needs_calibration", false);
 
     qDebug() << Q_FUNC_INFO << manualCalibration;
 #ifdef CALIBRATE_DATA

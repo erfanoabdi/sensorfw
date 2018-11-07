@@ -26,8 +26,8 @@ range
 1: +/- 4g (2 mg/LSB)
 2: +/- 8g (4 mg/LSB)
 */
-    QByteArray rangePath = Config::configuration()->value("accelerometer/range_path").toByteArray();
-    range = Config::configuration()->value("accelerometer/range_mode").toByteArray();
+    QByteArray rangePath = SensorFrameworkConfig::configuration()->value("accelerometer/range_path").toByteArray();
+    range = SensorFrameworkConfig::configuration()->value("accelerometer/range_mode").toByteArray();
     if(!rangePath.isEmpty()) {
         writeToFile(rangePath, range);
     }
@@ -44,8 +44,8 @@ power_state/frequency
      7: 400 Hz
      */
 
-    powerStatePath = Config::configuration()->value("accelerometer/mode_path").toByteArray();
-    frequency = Config::configuration()->value("accelerometer/frequency_mode").toInt();
+    powerStatePath = SensorFrameworkConfig::configuration()->value("accelerometer/mode_path").toByteArray();
+    frequency = SensorFrameworkConfig::configuration()->value("accelerometer/frequency_mode").toInt();
 
     setDescription("ste accelerometer");
 }

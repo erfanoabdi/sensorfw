@@ -48,7 +48,7 @@ HybrisOrientationAdaptor::HybrisOrientationAdaptor(const QString& id) :
     setAdaptedSensor("hybrisorientation", "Internal orientation coordinates", buffer);
 
     setDescription("Hybris orientation");
-    powerStatePath = Config::configuration()->value("orientation/powerstate_path").toByteArray();
+    powerStatePath = SensorFrameworkConfig::configuration()->value("orientation/powerstate_path").toByteArray();
     if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
     {
     	sensordLogW() << "Path does not exists: " << powerStatePath;

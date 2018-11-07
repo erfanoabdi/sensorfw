@@ -478,7 +478,7 @@ void SysfsAdaptorReader::run()
 
 void SysfsAdaptor::init()
 {
-    QString path = Config::configuration()->value(name() + "/path").toString();
+    QString path = SensorFrameworkConfig::configuration()->value(name() + "/path").toString();
     if(!path.isEmpty())
     {
         addPath(path);
@@ -487,10 +487,10 @@ void SysfsAdaptor::init()
     {
         sensordLogW() << "No sysfs path defined for: " << name();
     }
-    mode_ = (PollMode)Config::configuration()->value<int>(name() + "/mode", mode_);
-    doSeek_ = Config::configuration()->value<bool>(name() + "/seek", doSeek_);
+    mode_ = (PollMode)SensorFrameworkConfig::configuration()->value<int>(name() + "/mode", mode_);
+    doSeek_ = SensorFrameworkConfig::configuration()->value<bool>(name() + "/seek", doSeek_);
 
     introduceAvailableDataRanges(name());
     introduceAvailableIntervals(name());
-    setDefaultInterval(Config::configuration()->value<int>(name() + "/default_interval", 0));
+    setDefaultInterval(SensorFrameworkConfig::configuration()->value<int>(name() + "/default_interval", 0));
 }

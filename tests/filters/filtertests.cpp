@@ -44,7 +44,7 @@
 
 void FilterApiTest::initTestCase()
 {
-    Config::loadConfig(CONFIG_FILE_PATH, CONFIG_DIR_PATH);
+    SensorFrameworkConfig::loadConfig(CONFIG_FILE_PATH, CONFIG_DIR_PATH);
 }
 
 /**

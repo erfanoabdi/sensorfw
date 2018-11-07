@@ -31,7 +31,7 @@ HybrisMagnetometerAdaptor::HybrisMagnetometerAdaptor(const QString& id) :
     setAdaptedSensor("magnetometer", "Internal magnetometer coordinates", buffer);
 
     setDescription("Hybris magnetometer");
-    powerStatePath = Config::configuration()->value("magnetometer/powerstate_path").toByteArray();
+    powerStatePath = SensorFrameworkConfig::configuration()->value("magnetometer/powerstate_path").toByteArray();
     if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
     {
     	sensordLogW() << "Path does not exists: " << powerStatePath;

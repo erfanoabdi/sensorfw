@@ -192,7 +192,7 @@ void Loader::scanAvailablePlugins()
             int end = file.size() - suffix.size();
             const QString name(file.mid(beg, end-beg));
             QString key = QString("available/%1").arg(name);
-            QString val = Config::configuration()->value(key).toString();
+            QString val = SensorFrameworkConfig::configuration()->value(key).toString();
             if( evaluateAvailabilityValue(name, val) ) {
                 res.append(name);
             }
@@ -235,7 +235,7 @@ void Loader::invalidatePlugin(const QString &name)
 QString Loader::resolveRealPluginName(const QString& pluginName) const
 {
     QString key = QString("plugins/%1").arg(pluginName);
-    QString nameFromConfig = Config::configuration()->value(key).toString();
+    QString nameFromConfig = SensorFrameworkConfig::configuration()->value(key).toString();
     if (nameFromConfig.isEmpty()) {
         sensordLogT() << "Plugin setting for " << pluginName << " not found from configuration. Using key as value.";
         return pluginName;

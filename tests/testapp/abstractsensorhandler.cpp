@@ -38,13 +38,13 @@ AbstractSensorHandler::AbstractSensorHandler(const QString& sensorName, QObject 
     frameCount_(0),
     downsample_(false)
 {
-    if (Config::configuration() != NULL)
+    if (SensorFrameworkConfig::configuration() != NULL)
     {
-        interval_ = Config::configuration()->value(sensorName_ + "/interval", 100);
-        bufferinterval_ = Config::configuration()->value(sensorName_ + "/bufferinterval", 0);
-        standbyoverride_ = Config::configuration()->value(sensorName_ + "/standbyoverride", false);
-        buffersize_ = Config::configuration()->value(sensorName_ + "/buffersize", 0);
-        downsample_ = Config::configuration()->value(sensorName_ + "/downsample", false);
+        interval_ = SensorFrameworkConfig::configuration()->value(sensorName_ + "/interval", 100);
+        bufferinterval_ = SensorFrameworkConfig::configuration()->value(sensorName_ + "/bufferinterval", 0);
+        standbyoverride_ = SensorFrameworkConfig::configuration()->value(sensorName_ + "/standbyoverride", false);
+        buffersize_ = SensorFrameworkConfig::configuration()->value(sensorName_ + "/buffersize", 0);
+        downsample_ = SensorFrameworkConfig::configuration()->value(sensorName_ + "/downsample", false);
     }
 }
 

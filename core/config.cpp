@@ -33,23 +33,23 @@
 #include <QDir>
 #include <QList>
 
-static Config *static_configuration = 0;
+static SensorFrameworkConfig *static_configuration = 0;
 
-Config::Config() {
+SensorFrameworkConfig::SensorFrameworkConfig() {
 }
 
-Config::~Config() {
+SensorFrameworkConfig::~SensorFrameworkConfig() {
 }
 
-void Config::clearConfig() {
+void SensorFrameworkConfig::clearConfig() {
     m_settings.clear();
 }
 
-bool Config::loadConfig(const QString &defConfigPath, const QString &configDPath) {
+bool SensorFrameworkConfig::loadConfig(const QString &defConfigPath, const QString &configDPath) {
     /* Not having config files is ok, failing to load one that exists is not */
     bool ret = true;
     if (!static_configuration) {
-        static_configuration = new Config();
+        static_configuration = new SensorFrameworkConfig();
     }
     /* Process config.d dir in alnum order */
     if (!configDPath.isEmpty()) {
@@ -68,7 +68,7 @@ bool Config::loadConfig(const QString &defConfigPath, const QString &configDPath
     return ret;
 }
 
-bool Config::loadConfigFile(const QString &configFileName) {
+bool SensorFrameworkConfig::loadConfigFile(const QString &configFileName) {
     /* Success means the file was loaded and processed without hiccups */
     bool loaded = false;
     if (!QFile::exists(configFileName)) {
@@ -90,7 +90,7 @@ bool Config::loadConfigFile(const QString &configFileName) {
     return loaded;
 }
 
-QVariant Config::value(const QString &key) const {
+QVariant SensorFrameworkConfig::value(const QString &key) const {
     QVariant var = m_settings.value(key, QVariant());
     if(var.isValid()) {
         sensordLogT() << "Value for key" << key << ":" << var.toString();
@@ -98,25 +98,25 @@ QVariant Config::value(const QString &key) const {
     return var;
 }
 
-QStringList Config::groups() const
+QStringList SensorFrameworkConfig::groups() const
 {
     QStringList groups = m_settings.childGroups();
     return groups;
 }
 
-Config *Config::configuration() {
+SensorFrameworkConfig *SensorFrameworkConfig::configuration() {
     if (!static_configuration) {
         sensordLogW() << "Configuration has not been loaded";
     }
     return static_configuration;
 }
 
-void Config::close() {
+void SensorFrameworkConfig::close() {
     delete static_configuration;
     static_configuration = 0;
 }
 
-bool Config::exists(const QString &key) const
+bool SensorFrameworkConfig::exists(const QString &key) const
 {
     return value(key).isValid();
 }

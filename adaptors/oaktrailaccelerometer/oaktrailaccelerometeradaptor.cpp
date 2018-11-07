@@ -13,7 +13,7 @@ OaktrailAccelAdaptor::OaktrailAccelAdaptor (const QString& id) :
 {
     struct stat st;
 
-    devPath = Config::configuration ()->value ("oaktrail_acc_sys_path").toString ();
+    devPath = SensorFrameworkConfig::configuration ()->value ("oaktrail_acc_sys_path").toString ();
     if ( lstat (devPath.toLatin1().constData(), &st) < 0 ) {
         sensordLogW () << devPath << "no found";
         return;

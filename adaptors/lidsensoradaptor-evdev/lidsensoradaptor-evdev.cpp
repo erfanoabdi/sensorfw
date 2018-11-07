@@ -47,7 +47,7 @@ LidSensorAdaptorEvdev::LidSensorAdaptorEvdev(const QString& id) :
 {
     lidBuffer_ = new DeviceAdaptorRingBuffer<LidData>(1);
     setAdaptedSensor("lidsensor", "Lid state", lidBuffer_);
-    powerStatePath_ = Config::configuration()->value("lidsensor/powerstate_path").toByteArray();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("lidsensor/powerstate_path").toByteArray();
 
 }
 
@@ -76,7 +76,7 @@ LidSensorAdaptorEvdev::~LidSensorAdaptorEvdev()
 void LidSensorAdaptorEvdev::init()
 {
     qDebug() << Q_FUNC_INFO << name();
-    QStringList strList = Config::configuration()->value<QStringList>(name() + "/input_match");
+    QStringList strList = SensorFrameworkConfig::configuration()->value<QStringList>(name() + "/input_match");
     qDebug() << strList;
     foreach (const QString str, strList) {
         if (!getInputDevices(str)) {

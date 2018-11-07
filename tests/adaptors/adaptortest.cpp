@@ -45,7 +45,7 @@
 
 void AdaptorTest::initTestCase()
 {
-    Config::loadConfig("/etc/sensorfw/sensord.conf", "/etc/sensorfw/sensord.conf.d");
+    SensorFrameworkConfig::loadConfig("/etc/sensorfw/sensord.conf", "/etc/sensorfw/sensord.conf.d");
 }
 
 void AdaptorTest::init() {}

@@ -43,7 +43,7 @@ GyroAdaptorEvdev::GyroAdaptorEvdev(const QString& id) :
     gyroscopeBuffer_ = new DeviceAdaptorRingBuffer<TimedXyzData>(1);
     setAdaptedSensor("gyroscope", "Internal gyroscope values", gyroscopeBuffer_);
     setDescription("Input device gyroscope adaptor");
-    powerStatePath_ = Config::configuration()->value("gyroscope/powerstate_path").toByteArray();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("gyroscope/powerstate_path").toByteArray();
    // introduceAvailableDataRange(DataRange(0, 4095, 1));
     setDefaultInterval(10);
 }

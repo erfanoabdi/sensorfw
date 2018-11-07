@@ -35,7 +35,7 @@ HybrisPressureAdaptor::HybrisPressureAdaptor(const QString& id) :
     buffer = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("pressure", "Internal ambient pressure sensor values", buffer);
     setDescription("Hybris pressure");
-    powerStatePath = Config::configuration()->value("pressure/powerstate_path").toByteArray();
+    powerStatePath = SensorFrameworkConfig::configuration()->value("pressure/powerstate_path").toByteArray();
     if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
     {
         sensordLogW() << "Path does not exists: " << powerStatePath;

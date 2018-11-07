@@ -49,7 +49,7 @@ MagnetometerSensorChannel::MagnetometerSensorChannel(const QString& id) :
 
     magnetometerReader_ = new BufferReader<CalibratedMagneticFieldData>(1);
 
-    scaleCoefficient_ = Config::configuration()->value("magnetometer/scale_coefficient", QVariant(300)).toInt();
+    scaleCoefficient_ = SensorFrameworkConfig::configuration()->value("magnetometer/scale_coefficient", QVariant(300)).toInt();
 
     if (scaleCoefficient_ != 1)
     {

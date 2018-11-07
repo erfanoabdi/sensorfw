@@ -227,10 +227,10 @@ int main(int argc, char *argv[])
         defConfigDir = parser.configDirPath();
     }
 
-    if (!Config::loadConfig(defConfigFile, defConfigDir))
+    if (!SensorFrameworkConfig::loadConfig(defConfigFile, defConfigDir))
     {
-        sensordLogC() << "Config file error! Load using default paths.";
-        if (!Config::loadConfig(CONFIG_FILE_PATH, CONFIG_DIR_PATH))
+        sensordLogC() << "SensorFrameworkConfig file error! Load using default paths.";
+        if (!SensorFrameworkConfig::loadConfig(CONFIG_FILE_PATH, CONFIG_DIR_PATH))
         {
             sensordLogC() << "Which also failed. Bailing out";
             return 1;
@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
     delete signalNotifier; signalNotifier = 0;
 
     sensordLogD() << "Exiting...";
-    Config::close();
+    SensorFrameworkConfig::close();
     return ret;
 }
 

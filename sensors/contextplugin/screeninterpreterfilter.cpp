@@ -47,7 +47,7 @@ ScreenInterpreterFilter::ScreenInterpreterFilter(
     topEdge("top")
 {
     // Get offset from config
-    offset = Config::configuration()->value("context/orientation_offset", QVariant(0)).toInt();
+    offset = SensorFrameworkConfig::configuration()->value("context/orientation_offset", QVariant(0)).toInt();
 }
 
 void ScreenInterpreterFilter::interpret(unsigned, const PoseData* data)

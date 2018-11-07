@@ -37,7 +37,7 @@ HybrisAlsAdaptor::HybrisAlsAdaptor(const QString& id) :
     buffer = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("als", "Internal ambient light sensor lux values", buffer);
     setDescription("Hybris als");
-    powerStatePath = Config::configuration()->value("als/powerstate_path").toByteArray();
+    powerStatePath = SensorFrameworkConfig::configuration()->value("als/powerstate_path").toByteArray();
     if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
     {
     	sensordLogW() << "Path does not exists: " << powerStatePath;
