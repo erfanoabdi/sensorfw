@@ -40,7 +40,7 @@ PressureAdaptor::PressureAdaptor(const QString& id) :
     pressureBuffer_ = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("pressure", "Pressure values", pressureBuffer_);
     setDescription("Input device pressure adaptor");
-    powerStatePath_ = Config::configuration()->value("pressure/powerstate_path").toByteArray();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("pressure/powerstate_path").toByteArray();
     introduceAvailableDataRange(DataRange(0, 4095, 1));
     setDefaultInterval(10);
 }

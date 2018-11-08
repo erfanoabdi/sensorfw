@@ -51,24 +51,24 @@ void ClientAdmin::init()
     if (parser.configFileInput())
     {
         QString defConfigFile = parser.configFilePath();
-        if (Config::loadConfig(defConfigFile, ""))
-            sensordLogT() << "Config file is loading successfully.";
+        if (SensorFrameworkConfig::loadConfig(defConfigFile, ""))
+            sensordLogT() << "SensorFrameworkConfig file is loading successfully.";
         else
         {
-            sensordLogW() << "Config file error! Load using default path.";
-            Config::loadConfig(CONFIG_FILE_PATH, "");
+            sensordLogW() << "SensorFrameworkConfig file error! Load using default path.";
+            SensorFrameworkConfig::loadConfig(CONFIG_FILE_PATH, "");
         }
     } else {
-        Config::loadConfig(CONFIG_FILE_PATH, "");
+        SensorFrameworkConfig::loadConfig(CONFIG_FILE_PATH, "");
     }
 
-    if (Config::configuration() == NULL)
+    if (SensorFrameworkConfig::configuration() == NULL)
     {
         sensordLogC() << "Failed to load configuration. Aborting.";
         exit(EXIT_FAILURE);
     }
 
-    if (!SensorHandler::init(Config::configuration()->groups()))
+    if (!SensorHandler::init(SensorFrameworkConfig::configuration()->groups()))
     {
         sensordLogC() << "Failed to initialize SensorHandler. Aborting.";
         exit(EXIT_FAILURE);
@@ -79,9 +79,9 @@ void ClientAdmin::runClients()
 {
     init();
 
-    foreach (const QString& sensorName, Config::configuration()->groups())
+    foreach (const QString& sensorName, SensorFrameworkConfig::configuration()->groups())
     {
-        int count = Config::configuration()->value<int>(sensorName + "/instances", 0);
+        int count = SensorFrameworkConfig::configuration()->value<int>(sensorName + "/instances", 0);
         for(int i = 0; i < count; ++i)
         {
             SensorHandler* handler = new SensorHandler(sensorName, this);
@@ -120,5 +120,5 @@ ClientAdmin::~ClientAdmin()
         }
         delete handler;
     }
-    Config::close();
+    SensorFrameworkConfig::close();
 }

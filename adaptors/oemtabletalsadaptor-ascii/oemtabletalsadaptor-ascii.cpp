@@ -16,7 +16,7 @@ OEMTabletALSAdaptorAscii::OEMTabletALSAdaptorAscii(const QString& id) : SysfsAda
     const unsigned int DEFAULT_RANGE = 65535;
 
     int range = DEFAULT_RANGE;
-    QFile sysFile(Config::configuration()->value("als-ascii_range_sysfs_path").toString());
+    QFile sysFile(SensorFrameworkConfig::configuration()->value("als-ascii_range_sysfs_path").toString());
 
     if (!(sysFile.open(QIODevice::ReadOnly))) {
         sensordLogW() << "Unable to config ALS range from sysfs, using default value: " << DEFAULT_RANGE;
@@ -28,7 +28,7 @@ OEMTabletALSAdaptorAscii::OEMTabletALSAdaptorAscii(const QString& id) : SysfsAda
     sensordLogT() << "Ambient light range: " << range;
 
     // Locate the actual handle
-    QString devPath = Config::configuration()->value("als-ascii_sysfs_path").toString();
+    QString devPath = SensorFrameworkConfig::configuration()->value("als-ascii_sysfs_path").toString();
 
     if (devPath.isEmpty())
     {

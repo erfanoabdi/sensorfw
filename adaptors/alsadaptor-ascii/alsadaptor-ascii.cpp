@@ -52,7 +52,7 @@ ALSAdaptorAscii::ALSAdaptorAscii(const QString& id) : SysfsAdaptor(id, SysfsAdap
     setDescription("Ambient light");
 
     // Get range from a file, if the path is found in configuration
-    QString rangeFilePath_ = Config::configuration()->value("als/range_file_path",QVariant("")).toString();
+    QString rangeFilePath_ = SensorFrameworkConfig::configuration()->value("als/range_file_path",QVariant("")).toString();
     if (rangeFilePath_ != "") {
         QFile sysFile(rangeFilePath_);
 
@@ -66,8 +66,8 @@ ALSAdaptorAscii::ALSAdaptorAscii(const QString& id) : SysfsAdaptor(id, SysfsAdap
             sensordLogT() << "Ambient light range: " << range;
         }
     }
-        powerStatePath = Config::configuration()->value("als/powerstate_path").toByteArray();
-        powerMode = Config::configuration()->value("als/mode").toByteArray();
+        powerStatePath = SensorFrameworkConfig::configuration()->value("als/powerstate_path").toByteArray();
+        powerMode = SensorFrameworkConfig::configuration()->value("als/mode").toByteArray();
 }
 
 ALSAdaptorAscii::~ALSAdaptorAscii()

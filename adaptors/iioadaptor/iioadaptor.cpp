@@ -81,7 +81,7 @@ void IioAdaptor::setup()
 
     if (deviceId.startsWith("accel")) {
         const QString name = "accelerometer";
-        const QString inputMatch = Config::configuration()->value<QString>(name + "/input_match");
+        const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
 
         devNodeNumber = findSensor(inputMatch);
@@ -96,7 +96,7 @@ void IioAdaptor::setup()
     }
     else if (deviceId.startsWith("gyro")) {
         const QString name = "gyroscope";
-        const QString inputMatch = Config::configuration()->value<QString>(name + "/input_match");
+        const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
 
         devNodeNumber = findSensor(inputMatch);
@@ -110,7 +110,7 @@ void IioAdaptor::setup()
     }
     else if (deviceId.startsWith("mag")) {
         const QString name = "magnetometer";
-        const QString inputMatch = Config::configuration()->value<QString>(name + "/input_match");
+        const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
 
         devNodeNumber = findSensor(inputMatch);
@@ -125,7 +125,7 @@ void IioAdaptor::setup()
     }
     else if (deviceId.startsWith("als")) {
         const QString name = "als";
-        const QString inputMatch = Config::configuration()->value<QString>(name + "/input_match");
+        const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
 
         devNodeNumber = findSensor(inputMatch);
         if (devNodeNumber!= -1) {

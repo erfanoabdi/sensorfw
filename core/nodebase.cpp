@@ -87,7 +87,7 @@ void NodeBase::introduceAvailableDataRange(const DataRange& range)
 
 void NodeBase::introduceAvailableDataRanges(const QString& typeName)
 {
-    QVariant ranges = Config::configuration()->value(typeName + "/dataranges");
+    QVariant ranges = SensorFrameworkConfig::configuration()->value(typeName + "/dataranges");
     if(ranges.isValid())
     {
         DataRangeList list(parseDataRangeList(ranges.toString(), 1));
@@ -280,7 +280,7 @@ void NodeBase::introduceAvailableInterval(const DataRange& interval)
 
 void NodeBase::introduceAvailableIntervals(const QString& typeName)
 {
-    QVariant ranges = Config::configuration()->value(typeName + "/intervals");
+    QVariant ranges = SensorFrameworkConfig::configuration()->value(typeName + "/intervals");
     if(ranges.isValid())
     {
         DataRangeList list(parseDataRangeList(ranges.toString(), 0));

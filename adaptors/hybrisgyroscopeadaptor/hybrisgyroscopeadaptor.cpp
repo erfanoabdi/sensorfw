@@ -35,7 +35,7 @@ HybrisGyroscopeAdaptor::HybrisGyroscopeAdaptor(const QString& id) :
     setAdaptedSensor("gyroscopeadaptor", "Internal gyroscope coordinates", buffer);
 
     setDescription("Hybris gyroscope");
-    powerStatePath = Config::configuration()->value("gyroscope/powerstate_path").toByteArray();
+    powerStatePath = SensorFrameworkConfig::configuration()->value("gyroscope/powerstate_path").toByteArray();
     if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
     {
     	sensordLogW() << "Path does not exists: " << powerStatePath;

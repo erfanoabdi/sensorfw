@@ -41,7 +41,7 @@ GyroscopeAdaptor::GyroscopeAdaptor(const QString& id) :
     gyroscopeBuffer_ = new DeviceAdaptorRingBuffer<TimedXyzData>(1);
     setAdaptedSensor("gyroscope", "l3g4200dh", gyroscopeBuffer_);
     setDescription("Sysfs Gyroscope adaptor (l3g4200dh)");   
-    dataRatePath_ = Config::configuration()->value("gyroscope/path_datarate").toByteArray();
+    dataRatePath_ = SensorFrameworkConfig::configuration()->value("gyroscope/path_datarate").toByteArray();
 }
 
 GyroscopeAdaptor::~GyroscopeAdaptor()

@@ -44,8 +44,8 @@ AccelerometerAdaptor::AccelerometerAdaptor(const QString& id) :
     accelerometerBuffer_ = new DeviceAdaptorRingBuffer<OrientationData>(1);
     setAdaptedSensor("accelerometer", "Internal accelerometer coordinates", accelerometerBuffer_);
     setDescription("Input device accelerometer adaptor");
-    powerStatePath_ = Config::configuration()->value("accelerometer/powerstate_path").toByteArray();
-    accelMultiplier = Config::configuration()->value("accelerometer/multiplier", QVariant(1)).toReal();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("accelerometer/powerstate_path").toByteArray();
+    accelMultiplier = SensorFrameworkConfig::configuration()->value("accelerometer/multiplier", QVariant(1)).toReal();
 }
 
 AccelerometerAdaptor::~AccelerometerAdaptor()

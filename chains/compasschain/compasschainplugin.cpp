@@ -37,7 +37,7 @@ void CompassChainPlugin::Register(class Loader&)
 }
 
 QStringList CompassChainPlugin::Dependencies() {
-    QByteArray orientationConfiguration = Config::configuration()->value("plugins/orientationadaptor").toByteArray();
+    QByteArray orientationConfiguration = SensorFrameworkConfig::configuration()->value("plugins/orientationadaptor").toByteArray();
     if (orientationConfiguration.isEmpty()) {
         return QString("accelerometerchain:magcalibrationchain:declinationfilter:downsamplefilter:avgaccfilter").split(":", QString::SkipEmptyParts);
     } else {

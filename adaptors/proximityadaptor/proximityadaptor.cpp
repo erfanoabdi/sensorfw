@@ -53,9 +53,9 @@ struct apds990x_data {
 ProximityAdaptor::ProximityAdaptor(const QString& id) :
     SysfsAdaptor(id, SysfsAdaptor::SelectMode, false)
 {
-    deviceType_ = (DeviceType)Config::configuration()->value<int>("proximity/driver_type", 0);
-    threshold_ = Config::configuration()->value<int>("proximity/threshold", 35);
-    powerStatePath_ = Config::configuration()->value("proximity/powerstate_path").toByteArray();
+    deviceType_ = (DeviceType)SensorFrameworkConfig::configuration()->value<int>("proximity/driver_type", 0);
+    threshold_ = SensorFrameworkConfig::configuration()->value<int>("proximity/threshold", 35);
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("proximity/powerstate_path").toByteArray();
     proximityBuffer_ = new DeviceAdaptorRingBuffer<ProximityData>(1);
     setAdaptedSensor("proximity", "Proximity state", proximityBuffer_);
     setDescription("Proximity sensor readings (Dipro sensor)");

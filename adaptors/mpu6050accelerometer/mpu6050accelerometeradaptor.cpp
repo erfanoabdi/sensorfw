@@ -40,21 +40,21 @@ Mpu6050AccelAdaptor::Mpu6050AccelAdaptor (const QString& id) :
 {
     struct stat st;
 
-    QString xAxisPath = Config::configuration()->value("accelerometer/x_axis_path").toString ();
+    QString xAxisPath = SensorFrameworkConfig::configuration()->value("accelerometer/x_axis_path").toString ();
     if ( lstat (xAxisPath.toLatin1().constData(), &st) < 0 ) {
         sensordLogW () << "x_axis_path: " << xAxisPath << " not found";
         return;
     }
     addPath(xAxisPath, X_AXIS);
 
-    QString yAxisPath = Config::configuration()->value("accelerometer/y_axis_path").toString ();
+    QString yAxisPath = SensorFrameworkConfig::configuration()->value("accelerometer/y_axis_path").toString ();
     if ( lstat (yAxisPath.toLatin1().constData(), &st) < 0 ) {
         sensordLogW () << "y_axis_path: " << yAxisPath << " not found";
         return;
     }
     addPath(yAxisPath, Y_AXIS);
 
-    QString zAxisPath = Config::configuration()->value("accelerometer/z_axis_path").toString ();
+    QString zAxisPath = SensorFrameworkConfig::configuration()->value("accelerometer/z_axis_path").toString ();
     if ( lstat (zAxisPath.toLatin1().constData(), &st) < 0 ) {
         sensordLogW () << "z_axis_path: " << zAxisPath << " not found";
         return;

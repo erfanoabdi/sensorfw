@@ -62,8 +62,8 @@ ALSAdaptor::ALSAdaptor(const QString& id):
     alsBuffer_ = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("als", "Internal ambient light sensor lux values", alsBuffer_);
     setDescription("Ambient light");
-    deviceType_ = (DeviceType)Config::configuration()->value<int>("als/driver_type", DeviceUnknown);
-    powerStatePath_ = Config::configuration()->value("als/powerstate_path").toByteArray();
+    deviceType_ = (DeviceType)SensorFrameworkConfig::configuration()->value<int>("als/driver_type", DeviceUnknown);
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("als/powerstate_path").toByteArray();
 
 #ifdef SENSORFW_MCE_WATCHER
     dbusIfc = new QDBusInterface(MCE_SERVICE, MCE_REQUEST_PATH, MCE_REQUEST_IF,

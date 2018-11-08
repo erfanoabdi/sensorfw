@@ -41,8 +41,8 @@ CalibrationHandler::CalibrationHandler(QObject* parent) :
 {
     m_timer.setSingleShot(true);
 
-    m_calibRate = Config::configuration()->value<int>("magnetometer/calibration_rate", 100);
-    m_calibTimeout = Config::configuration()->value<int>("magnetometer/calibration_timeout", 60000);
+    m_calibRate = SensorFrameworkConfig::configuration()->value<int>("magnetometer/calibration_rate", 100);
+    m_calibTimeout = SensorFrameworkConfig::configuration()->value<int>("magnetometer/calibration_timeout", 60000);
 }
 
 CalibrationHandler::~CalibrationHandler()

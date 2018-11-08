@@ -40,7 +40,7 @@ TemperatureAdaptor::TemperatureAdaptor(const QString& id) :
     temperatureBuffer_ = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("temperature", "Temperature values", temperatureBuffer_);
     setDescription("Input device temperature adaptor");
-    powerStatePath_ = Config::configuration()->value("temperature/powerstate_path").toByteArray();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("temperature/powerstate_path").toByteArray();
     introduceAvailableDataRange(DataRange(0, 4095, 1));
     setDefaultInterval(10);
 }

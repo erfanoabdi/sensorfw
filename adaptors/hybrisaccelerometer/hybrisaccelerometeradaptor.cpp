@@ -33,7 +33,7 @@ HybrisAccelerometerAdaptor::HybrisAccelerometerAdaptor(const QString& id) :
     setAdaptedSensor("accelerometer", "Internal accelerometer coordinates", buffer);
 
     setDescription("Hybris accelerometer");
-    powerStatePath = Config::configuration()->value("accelerometer/powerstate_path").toByteArray();
+    powerStatePath = SensorFrameworkConfig::configuration()->value("accelerometer/powerstate_path").toByteArray();
 //    setDefaultInterval(50);
 }
 

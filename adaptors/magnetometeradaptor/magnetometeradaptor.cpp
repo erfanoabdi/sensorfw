@@ -46,10 +46,10 @@ struct ak8974_data {
 MagnetometerAdaptor::MagnetometerAdaptor(const QString& id) :
     SysfsAdaptor(id, SysfsAdaptor::IntervalMode, false)
 {
-    intervalCompensation_ = Config::configuration()->value<int>("magnetometer/interval_compensation", 0);
+    intervalCompensation_ = SensorFrameworkConfig::configuration()->value<int>("magnetometer/interval_compensation", 0);
     magnetometerBuffer_ = new DeviceAdaptorRingBuffer<CalibratedMagneticFieldData>(1);
     setAdaptedSensor("magnetometer", "Internal magnetometer coordinates", magnetometerBuffer_);
-    overflowLimit_ = Config::configuration()->value<int>("magnetometer/overflow_limit", 8000);
+    overflowLimit_ = SensorFrameworkConfig::configuration()->value<int>("magnetometer/overflow_limit", 8000);
     setDescription("Input device Magnetometer adaptor (ak897x)");
 }
 

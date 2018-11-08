@@ -35,16 +35,16 @@
 
 /**
  * Sensord configuration parser. Configuration is read and parsed with
- * the QSettings class. Config is a singleton instance to which configuration
+ * the QSettings class. SensorFrameworkConfig is a singleton instance to which configuration
  * is loaded once during startup.
  */
-class Config
+class SensorFrameworkConfig
 {
 public:
     /**
      * Destructor.
      */
-    ~Config();
+    ~SensorFrameworkConfig();
 
     /**
      * Find value for given key. Default QVariant is returned if key does
@@ -86,7 +86,7 @@ public:
      *
      * @return configuration instance.
      */
-    static Config *configuration();
+    static SensorFrameworkConfig *configuration();
 
     /**
      * Load configuration from given paths and append them to singleton
@@ -106,14 +106,14 @@ private:
     /**
      * Constructor.
      */
-    Config();
+    SensorFrameworkConfig();
 
     /**
      * Copy constructor.
      *
      * @param c source object.
      */
-    Config(const Config &c);
+    SensorFrameworkConfig(const SensorFrameworkConfig &c);
 
     /**
      * Assignment operator.
@@ -121,7 +121,7 @@ private:
      * @param c source object.
      * @return current object.
      */
-    Config& operator=(const Config &c);
+    SensorFrameworkConfig& operator=(const SensorFrameworkConfig &c);
 
     /**
      * Load configuration file from given path.
@@ -140,7 +140,7 @@ private:
 };
 
 template<typename T>
-T Config::value(const QString &key, const T &def) const
+T SensorFrameworkConfig::value(const QString &key, const T &def) const
 {
     QVariant val(value(key));
     if(!val.isValid())

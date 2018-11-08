@@ -39,7 +39,7 @@ HybrisProximityAdaptor::HybrisProximityAdaptor(const QString& id) :
         setAdaptedSensor("proximity", "Internal proximity coordinates", buffer);
 
         setDescription("Hybris proximity");
-        powerStatePath = Config::configuration()->value("proximity/powerstate_path").toByteArray();
+        powerStatePath = SensorFrameworkConfig::configuration()->value("proximity/powerstate_path").toByteArray();
 	if (!powerStatePath.isEmpty() && !QFile::exists(powerStatePath))
 	{
 	    sensordLogW() << "Path does not exists: " << powerStatePath;

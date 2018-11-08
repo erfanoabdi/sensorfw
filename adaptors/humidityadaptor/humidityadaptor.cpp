@@ -40,7 +40,7 @@ HumidityAdaptor::HumidityAdaptor(const QString& id) :
     humidityBuffer_ = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
     setAdaptedSensor("humidity", "Relative Humidity values", humidityBuffer_);
     setDescription("Input device humidity adaptor");
-    powerStatePath_ = Config::configuration()->value("humidity/powerstate_path").toByteArray();
+    powerStatePath_ = SensorFrameworkConfig::configuration()->value("humidity/powerstate_path").toByteArray();
     introduceAvailableDataRange(DataRange(0, 4095, 1));
     setDefaultInterval(10);
 }

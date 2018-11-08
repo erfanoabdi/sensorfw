@@ -34,9 +34,9 @@ MagnetometerAdaptorNCDK::MagnetometerAdaptorNCDK(const QString& id) :
     SysfsAdaptor(id, SysfsAdaptor::IntervalMode),
     powerState_(false)
 {
-    intervalCompensation_ = Config::configuration()->value<int>("magnetometer/interval_compensation", 0);
-    powerStateFilePath_ = Config::configuration()->value<QByteArray>("magnetometer/path_power_state", "");
-    sensAdjFilePath_ = Config::configuration()->value<QByteArray>("magnetometer/path_sens_adjust", "");
+    intervalCompensation_ = SensorFrameworkConfig::configuration()->value<int>("magnetometer/interval_compensation", 0);
+    powerStateFilePath_ = SensorFrameworkConfig::configuration()->value<QByteArray>("magnetometer/path_power_state", "");
+    sensAdjFilePath_ = SensorFrameworkConfig::configuration()->value<QByteArray>("magnetometer/path_sens_adjust", "");
     magnetometerBuffer_ = new DeviceAdaptorRingBuffer<CalibratedMagneticFieldData>(128);
     setAdaptedSensor("magnetometer", "Internal magnetometer coordinates", magnetometerBuffer_);
     setDescription("Magnetometer adaptor (ak8975) for NCDK");
@@ -44,7 +44,7 @@ MagnetometerAdaptorNCDK::MagnetometerAdaptorNCDK(const QString& id) :
     //get sensitivity adjustment
     getSensitivityAdjustment(x_adj, y_adj, z_adj);
 
-    overflowLimit_ = Config::configuration()->value<int>("magnetometer/overflow_limit", 8000);
+    overflowLimit_ = SensorFrameworkConfig::configuration()->value<int>("magnetometer/overflow_limit", 8000);
 }
 
 MagnetometerAdaptorNCDK::~MagnetometerAdaptorNCDK()

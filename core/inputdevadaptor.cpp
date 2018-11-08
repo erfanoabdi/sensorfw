@@ -59,14 +59,14 @@ InputDevAdaptor::~InputDevAdaptor()
 int InputDevAdaptor::getInputDevices(const QString& typeName)
 {
     qDebug() << Q_FUNC_INFO << typeName;
-    QString deviceSysPathString = Config::configuration()->value("global/device_sys_path").toString();
-    QString devicePollFilePath = Config::configuration()->value("global/device_poll_file_path").toString();
+    QString deviceSysPathString = SensorFrameworkConfig::configuration()->value("global/device_sys_path").toString();
+    QString devicePollFilePath = SensorFrameworkConfig::configuration()->value("global/device_poll_file_path").toString();
 
     int deviceNumber = 0;
     deviceString_ = typeName;
 
     // Check if this device name is defined in configuration
-    QString deviceName = Config::configuration()->value<QString>(typeName + "/device", "");
+    QString deviceName = SensorFrameworkConfig::configuration()->value<QString>(typeName + "/device", "");
 
     // Do not perform strict checks for the input device
     if (deviceName.size() && checkInputDevice(deviceName, typeName, false)) {
@@ -90,8 +90,8 @@ qDebug() << deviceNumber << deviceCount_ << maxDeviceCount_;
     }
 
     QString pollConfigKey = QString(typeName + "/poll_file");
-    if (Config::configuration()->exists(pollConfigKey)) {
-        usedDevicePollFilePath_ = Config::configuration()->value<QString>(pollConfigKey, "");
+    if (SensorFrameworkConfig::configuration()->exists(pollConfigKey)) {
+        usedDevicePollFilePath_ = SensorFrameworkConfig::configuration()->value<QString>(pollConfigKey, "");
     } else {
         usedDevicePollFilePath_ = devicePollFilePath.arg(deviceNumber);
     }
@@ -191,7 +191,7 @@ bool InputDevAdaptor::setInterval(const unsigned int value, const int sessionId)
 void InputDevAdaptor::init()
 {
     qDebug() << Q_FUNC_INFO << name();
-    if (!getInputDevices(Config::configuration()->value<QString>(name() + "/input_match", name()))) {
+    if (!getInputDevices(SensorFrameworkConfig::configuration()->value<QString>(name() + "/input_match", name()))) {
         sensordLogW() << "Input device not found.";
         SysfsAdaptor::init();
     }
