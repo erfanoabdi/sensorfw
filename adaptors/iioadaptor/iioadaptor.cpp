@@ -145,6 +145,14 @@ void IioAdaptor::setup()
     iioDevice.channels = scanElementsEnable(devNodeNumber,1);
     scanElementsEnable(devNodeNumber,0);
 
+    /* Override the scaling factor if asked */
+    bool ok;
+    double scale_override = SensorFrameworkConfig::configuration()->value(iioDevice.name + "/scale").toDouble(&ok);
+    if (ok) {
+        sensordLogD() << "Overriding scale to" << scale_override;
+        iioDevice.scale = scale_override;
+    }
+
     introduceAvailableDataRange(DataRange(0, 65535, 1));
     introduceAvailableInterval(DataRange(0, 586, 0));
     setDefaultInterval(10);
