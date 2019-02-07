@@ -15,7 +15,7 @@ contains(CONFIG,autohybris) {
 
 TEMPLATE = subdirs
 CONFIG += ordered
-SUBDIRS = datatypes \ 
+SUBDIRS = datatypes \
           adaptors \
           core \
           filters \
@@ -29,7 +29,7 @@ SUBDIRS = datatypes \
 equals(QT_MAJOR_VERSION, 4): {
     SUBDIRS = datatypes qt-api
 }
-    
+
 contains(CONFIG,configs) {
    # !contains(CONFIG,hybris) {
         SENSORDHYBRISCONFIGFILE.files = config/sensord-hybris.conf
@@ -53,10 +53,10 @@ contains(CONFIG,configs) {
 
     SENSORCONFIG_SETUP.files = config/sensord-daemon-conf-setup
     SENSORCONFIG_SETUP.path = /usr/bin
-    
+
      INSTALLS +=  SENSORFWCONFIGFILES SENSORCONFIG_SETUP
  }
-    
+
 contains(CONFIG,hybris) {
 
     SUBDIRS = core/hybris.pro \
@@ -81,11 +81,13 @@ contains(CONFIG,hybris) {
 
     equals(QT_MAJOR_VERSION, 4):{
         PKGCONFIGFILES.files = sensord.pc
+        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" sensord.pc'
         QTCONFIGFILES.path = /usr/share/qt4/mkspecs/features
     }
 
     equals(QT_MAJOR_VERSION, 5):{
         PKGCONFIGFILES.files = sensord-qt5.pc
+        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" sensord-qt5.pc'
         QTCONFIGFILES.path = /usr/share/qt5/mkspecs/features
 
     }
@@ -128,4 +130,3 @@ equals(QT_MAJOR_VERSION, 5):  {
 
 }
 OTHER_FILES += config/*
-
