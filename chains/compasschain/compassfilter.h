@@ -59,7 +59,7 @@ private:
     qreal oldMagZ;
 
     int level;
-    int oldHeading;
+    qreal oldHeading;
     QList <int> averagingBuffer;
     QList <const CalibratedMagneticFieldData *> magAvgBuffer;
     QList <const AccelerationData *> accelAvgBuffer;

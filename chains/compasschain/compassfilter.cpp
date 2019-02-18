@@ -105,7 +105,7 @@ void CompassFilter::accelDataAvailable(unsigned, const AccelerationData *data)
     /* calculate yaw = ecompass angle psi (-180deg, 180deg) */
     Psi = (qAtan2(-fBfy, fBfx) * RADIANS_TO_DEGREES); /* Equation 7 */
 
-    int heading = Psi * FILTER_FACTOR + oldHeading * (1.0 - FILTER_FACTOR);
+    qreal heading = Psi * FILTER_FACTOR + oldHeading * (1.0 - FILTER_FACTOR);
 
     CompassData compassData; //north angle
     compassData.timestamp_ = data->timestamp_;
