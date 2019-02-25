@@ -98,7 +98,8 @@ export QT_SELECT=5
 
 %qmake5  \
     CONFIG+=ssusysinfo\
-    CONFIG+=mce
+    CONFIG+=mce\
+    PC_VERSION=`echo %{version} | sed 's/+.*//'`
 
 make %{?_smp_mflags}
 

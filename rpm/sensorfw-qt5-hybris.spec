@@ -44,7 +44,7 @@ unset LD_AS_NEEDED
 export LD_RUN_PATH=/usr/lib/sensord-qt5/
 export QT_SELECT=5
 
-%qmake5 CONFIG+=hybris
+%qmake5 CONFIG+=hybris PC_VERSION=`echo %{version} | sed 's/+.*//'`
 
 make %{?_smp_mflags}
 
