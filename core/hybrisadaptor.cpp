@@ -219,11 +219,11 @@ HybrisManager::HybrisManager(QObject *parent)
     , m_registeredAdaptors()
     , m_halModule(NULL)
     , m_halDevice(NULL)
-    , m_halSensorCount(0)
-    , m_halSensorArray(NULL)
-    , m_halSensorState(NULL)
-    , m_halIndexOfType()
-    , m_halIndexOfHandle()
+    , m_sensorCount(0)
+    , m_sensorArray(NULL)
+    , m_sensorState(NULL)
+    , m_indexOfType()
+    , m_indexOfHandle()
     , m_halEventReaderTid(0)
 {
     int err;
@@ -246,44 +246,44 @@ HybrisManager::HybrisManager(QObject *parent)
     }
 
     /* Get static sensor information */
-    m_halSensorCount = m_halModule->get_sensors_list(m_halModule, &m_halSensorArray);
+    m_sensorCount = m_halModule->get_sensors_list(m_halModule, &m_sensorArray);
 
     /* Reserve space for sensor state data */
-    m_halSensorState = new HybrisSensorState[m_halSensorCount];
+    m_sensorState = new HybrisSensorState[m_sensorCount];
 
     /* Select and initialize sensors to be used */
-    for (int i = 0 ; i < m_halSensorCount ; i++) {
+    for (int i = 0 ; i < m_sensorCount ; i++) {
         /* Always do handle -> index mapping */
-        m_halIndexOfHandle.insert(m_halSensorArray[i].handle, i);
+        m_indexOfHandle.insert(m_sensorArray[i].handle, i);
 
         bool use = true;
         // Assumption: The primary sensor variants that we want to
         // use are listed before the secondary ones that we want
         // to ignore -> Use the 1st entry found for each sensor type.
-        if (m_halIndexOfType.contains(m_halSensorArray[i].type)) {
+        if (m_indexOfType.contains(m_sensorArray[i].type)) {
             use = false;
         }
 
         // some devices have compass and compass raw,
         // ignore compass raw. compass has range 360
-        if (m_halSensorArray[i].type == SENSOR_TYPE_ORIENTATION &&
-            m_halSensorArray[i].maxRange != 360) {
+        if (m_sensorArray[i].type == SENSOR_TYPE_ORIENTATION &&
+            m_sensorArray[i].maxRange != 360) {
             use = false;
         }
 
         sensordLogD() << Q_FUNC_INFO
             << (use ? "SELECT" : "IGNORE")
-            << "type:" << m_halSensorArray[i].type
-            << "name:" << (m_halSensorArray[i].name ?: "n/a");
+            << "type:" << m_sensorArray[i].type
+            << "name:" << (m_sensorArray[i].name ?: "n/a");
 
         if (use) {
             // min/max delay is specified in [us] -> convert to [ms]
-            int minDelay = (m_halSensorArray[i].minDelay + 999) / 1000;
+            int minDelay = (m_sensorArray[i].minDelay + 999) / 1000;
             int maxDelay = -1; // Assume: not defined by hal
 
 #ifdef SENSORS_DEVICE_API_VERSION_1_3
             if (m_halDevice->common.version >= SENSORS_DEVICE_API_VERSION_1_3)
-                maxDelay = (m_halSensorArray[i].maxDelay + 999) / 1000;
+                maxDelay = (m_sensorArray[i].maxDelay + 999) / 1000;
 #endif
             /* If HAL does not define maximum delay, we need to invent
              * something that a) allows sensorfwd logic to see a range
@@ -315,27 +315,27 @@ HybrisManager::HybrisManager(QObject *parent)
                 else if (delay > maxDelay )
                     delay = maxDelay;
 
-                m_halSensorState[i].m_minDelay = minDelay;
-                m_halSensorState[i].m_maxDelay = maxDelay;
+                m_sensorState[i].m_minDelay = minDelay;
+                m_sensorState[i].m_maxDelay = maxDelay;
 
-                halSetActive(m_halSensorArray[i].handle, true);
-                halSetDelay(m_halSensorArray[i].handle, delay);
+                setActive(m_sensorArray[i].handle, true);
+                setDelay(m_sensorArray[i].handle, delay);
 
                 sensordLogD("delay = %d [%d, %d]",
-                            m_halSensorState[i].m_delay,
-                            m_halSensorState[i].m_minDelay,
-                            m_halSensorState[i].m_maxDelay);
+                            m_sensorState[i].m_delay,
+                            m_sensorState[i].m_minDelay,
+                            m_sensorState[i].m_maxDelay);
             }
-            m_halIndexOfType.insert(m_halSensorArray[i].type, i);
+            m_indexOfType.insert(m_sensorArray[i].type, i);
 
             /* Set sane fallback values for select sensors in case the
              * hal does not report initial values. */
-            sensors_event_t *eve = &m_halSensorState[i].m_fallbackEvent;
+            sensors_event_t *eve = &m_sensorState[i].m_fallbackEvent;
             eve->version = sizeof *eve;
-            eve->sensor  = m_halSensorArray[i].handle;
-            eve->type    = m_halSensorArray[i].type;
+            eve->sensor  = m_sensorArray[i].handle;
+            eve->type    = m_sensorArray[i].type;
 
-            switch (m_halSensorArray[i].type) {
+            switch (m_sensorArray[i].type) {
             case SENSOR_TYPE_LIGHT:
                 // Roughly indoor lightning
                 eve->light = 400;
@@ -343,7 +343,7 @@ HybrisManager::HybrisManager(QObject *parent)
 
             case SENSOR_TYPE_PROXIMITY:
                 // Not-covered
-                eve->distance = m_halSensorArray[i].maxRange;
+                eve->distance = m_sensorArray[i].maxRange;
                 break;
             default:
                 eve->sensor  = 0;
@@ -353,7 +353,7 @@ HybrisManager::HybrisManager(QObject *parent)
         }
 
         /* Make sure all sensors are initially in stopped state */
-        halSetActive(m_halSensorArray[i].handle, false);
+        setActive(m_sensorArray[i].handle, false);
     }
 
     /* Start android sensor event reader */
@@ -411,7 +411,7 @@ HybrisManager::~HybrisManager()
             _exit(EXIT_FAILURE);
         }
     }
-    delete[] m_halSensorState;
+    delete[] m_sensorState;
 }
 
 HybrisManager *HybrisManager::instance()
@@ -420,33 +420,33 @@ HybrisManager *HybrisManager::instance()
     return priv;
 }
 
-int HybrisManager::halHandleForType(int sensorType) const
+int HybrisManager::handleForType(int sensorType) const
 {
-    int index = halIndexForType(sensorType);
-    return (index < 0) ? -1 : m_halSensorArray[index].handle;
+    int index = indexForType(sensorType);
+    return (index < 0) ? -1 : m_sensorArray[index].handle;
 }
 
-sensors_event_t *HybrisManager::halEventForHandle(int handle) const
+sensors_event_t *HybrisManager::eventForHandle(int handle) const
 {
     sensors_event_t *event = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
     if (index != -1) {
-        event = &m_halSensorState[index].m_fallbackEvent;
+        event = &m_sensorState[index].m_fallbackEvent;
     }
     return event;
 }
 
-int HybrisManager::halIndexForHandle(int handle) const
+int HybrisManager::indexForHandle(int handle) const
 {
-    int index = m_halIndexOfHandle.value(handle, -1);
+    int index = m_indexOfHandle.value(handle, -1);
     if (index == -1)
         sensordLogW("HYBRIS CTL invalid sensor handle: %d", handle);
     return index;
 }
 
-int HybrisManager::halIndexForType(int sensorType) const
+int HybrisManager::indexForType(int sensorType) const
 {
-    int index = m_halIndexOfType.value(sensorType, -1);
+    int index = m_indexOfType.value(sensorType, -1);
     if (index == -1)
         sensordLogW("HYBRIS CTL invalid sensor type: %d", sensorType);
     return index;
@@ -456,7 +456,7 @@ void HybrisManager::startReader(HybrisAdaptor *adaptor)
 {
     if (m_registeredAdaptors.values().contains(adaptor)) {
         sensordLogD() << "activating " << adaptor->name() << adaptor->m_sensorHandle;
-        if (!halSetActive(adaptor->m_sensorHandle, true)) {
+        if (!setActive(adaptor->m_sensorHandle, true)) {
             sensordLogW() <<Q_FUNC_INFO<< "failed";
             adaptor->setValid(false);
         }
@@ -467,7 +467,7 @@ void HybrisManager::stopReader(HybrisAdaptor *adaptor)
 {
     if (m_registeredAdaptors.values().contains(adaptor)) {
             sensordLogD() << "deactivating " << adaptor->name();
-            if (!halSetActive(adaptor->m_sensorHandle, false)) {
+            if (!setActive(adaptor->m_sensorHandle, false)) {
                 sensordLogW() <<Q_FUNC_INFO<< "failed";
             }
     }
@@ -489,13 +489,13 @@ void HybrisManager::registerAdaptor(HybrisAdaptor *adaptor)
     }
 }
 
-float HybrisManager::halGetMaxRange(int handle) const
+float HybrisManager::getMaxRange(int handle) const
 {
     float range = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
 
         range = sensor->maxRange;
         sensordLogT("HYBRIS CTL getMaxRange(%d=%s) -> %g",
@@ -505,13 +505,13 @@ float HybrisManager::halGetMaxRange(int handle) const
     return range;
 }
 
-float HybrisManager::halGetResolution(int handle) const
+float HybrisManager::getResolution(int handle) const
 {
     float resolution = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
 
         resolution = sensor->resolution;
         sensordLogT("HYBRIS CTL getResolution(%d=%s) -> %g",
@@ -521,14 +521,14 @@ float HybrisManager::halGetResolution(int handle) const
     return resolution;
 }
 
-int HybrisManager::halGetMinDelay(int handle) const
+int HybrisManager::getMinDelay(int handle) const
 {
     int delay = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         delay = state->m_minDelay;
         sensordLogT("HYBRIS CTL getMinDelay(%d=%s) -> %d",
@@ -538,14 +538,14 @@ int HybrisManager::halGetMinDelay(int handle) const
     return delay;
 }
 
-int HybrisManager::halGetMaxDelay(int handle) const
+int HybrisManager::getMaxDelay(int handle) const
 {
     int delay = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         delay = state->m_maxDelay;
         sensordLogT("HYBRIS CTL getMaxDelay(%d=%s) -> %d",
@@ -555,14 +555,14 @@ int HybrisManager::halGetMaxDelay(int handle) const
     return delay;
 }
 
-int HybrisManager::halGetDelay(int handle) const
+int HybrisManager::getDelay(int handle) const
 {
     int delay = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         delay = state->m_delay;
         sensordLogT("HYBRIS CTL getDelay(%d=%s) -> %d",
@@ -572,14 +572,14 @@ int HybrisManager::halGetDelay(int handle) const
     return delay;
 }
 
-bool HybrisManager::halSetDelay(int handle, int delay_ms)
+bool HybrisManager::setDelay(int handle, int delay_ms)
 {
     bool success = false;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         if (state->m_delay == delay_ms) {
             sensordLogT("HYBRIS CTL setDelay(%d=%s, %d) -> no-change",
@@ -603,14 +603,14 @@ bool HybrisManager::halSetDelay(int handle, int delay_ms)
     return success;
 }
 
-bool HybrisManager::halGetActive(int handle) const
+bool HybrisManager::getActive(int handle) const
 {
     bool active = false;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         active = (state->m_active > 0);
         sensordLogT("HYBRIS CTL getActive(%d=%s) -> %s",
@@ -620,14 +620,14 @@ bool HybrisManager::halGetActive(int handle) const
     return active;
 }
 
-bool HybrisManager::halSetActive(int handle, bool active)
+bool HybrisManager::setActive(int handle, bool active)
 {
     bool success = false;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         if (state->m_active == active) {
             sensordLogT("HYBRIS CTL setActive%d=%s, %s) -> no-change",
@@ -649,7 +649,7 @@ bool HybrisManager::halSetActive(int handle, bool active)
                 sensordLogD("HYBRIS CTL FORCE DELAY UPDATE");
                 int delay_ms = state->m_delay;
                 state->m_delay = -1;
-                halSetDelay(handle, delay_ms);
+                setDelay(handle, delay_ms);
             }
         }
     }
@@ -692,7 +692,7 @@ void *HybrisManager::halEventReaderThread(void *aptr)
             sensordLogT("HYBRIS EVE %s", sensorTypeName(data.type));
 
             /* Got data -> Clear the no longer needed fallback event */
-            sensors_event_t *fallback = manager->halEventForHandle(data.sensor);
+            sensors_event_t *fallback = manager->eventForHandle(data.sensor);
             if (fallback && fallback->type == data.type && fallback->sensor == data.sensor) {
                 fallback->type = fallback->sensor = 0;
             }
@@ -732,7 +732,7 @@ HybrisAdaptor::HybrisAdaptor(const QString& id, int type)
     , m_sensorHandle(-1)
     , m_sensorType(type)
 {
-    m_sensorHandle = hybrisManager()->halHandleForType(m_sensorType);
+    m_sensorHandle = hybrisManager()->handleForType(m_sensorType);
     if (m_sensorHandle == -1) {
         sensordLogW() << Q_FUNC_INFO <<"no such sensor" << id;
         setValid(false);
@@ -789,12 +789,12 @@ qreal HybrisAdaptor::minRange() const
 
 qreal HybrisAdaptor::maxRange() const
 {
-    return hybrisManager()->halGetMaxRange(m_sensorHandle);
+    return hybrisManager()->getMaxRange(m_sensorHandle);
 }
 
 qreal HybrisAdaptor::resolution() const
 {
-    return hybrisManager()->halGetResolution(m_sensorHandle);
+    return hybrisManager()->getResolution(m_sensorHandle);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -803,30 +803,30 @@ qreal HybrisAdaptor::resolution() const
 
 unsigned int HybrisAdaptor::minInterval() const
 {
-    return hybrisManager()->halGetMinDelay(m_sensorHandle);
+    return hybrisManager()->getMinDelay(m_sensorHandle);
 }
 
 unsigned int HybrisAdaptor::maxInterval() const
 {
-    return hybrisManager()->halGetMaxDelay(m_sensorHandle);
+    return hybrisManager()->getMaxDelay(m_sensorHandle);
 }
 
 unsigned int HybrisAdaptor::interval() const
 {
-    return hybrisManager()->halGetDelay(m_sensorHandle);
+    return hybrisManager()->getDelay(m_sensorHandle);
 }
 
 bool HybrisAdaptor::setInterval(const unsigned int value, const int sessionId)
 {
     Q_UNUSED(sessionId);
 
-    bool ok = hybrisManager()->halSetDelay(m_sensorHandle, value);
+    bool ok = hybrisManager()->setDelay(m_sensorHandle, value);
 
     if (!ok) {
         sensordLogW() << Q_FUNC_INFO << "setInterval not ok";
     } else {
         /* If we have not yet received sensor data, apply fallback value */
-        sensors_event_t *fallback = hybrisManager()->halEventForHandle(m_sensorHandle);
+        sensors_event_t *fallback = hybrisManager()->eventForHandle(m_sensorHandle);
         if (fallback && fallback->sensor == m_sensorHandle && fallback->type == m_sensorType) {
             sensordLogT("HYBRIS FALLBACK type:%s sensor:%d",
                         sensorTypeName(fallback->type),
@@ -913,7 +913,7 @@ void HybrisAdaptor::evaluateSensor()
             }
 
             /* If we have not yet received sensor data, apply fallback value */
-            sensors_event_t *fallback = hybrisManager()->halEventForHandle(m_sensorHandle);
+            sensors_event_t *fallback = hybrisManager()->eventForHandle(m_sensorHandle);
             if (fallback && fallback->sensor == m_sensorHandle && fallback->type == m_sensorType) {
                 sensordLogT("HYBRIS FALLBACK type:%s sensor:%d",
                             sensorTypeName(fallback->type),

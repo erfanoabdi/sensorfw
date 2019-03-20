@@ -59,18 +59,18 @@ public:
      * android sensor hal functions
      * - - - - - - - - - - - - - - - - - - - */
 
-    sensors_event_t *halEventForHandle(int handle) const;
-    int              halIndexForHandle(int handle) const;
-    int              halIndexForType  (int sensorType) const;
-    int              halHandleForType (int sensorType) const;
-    float            halGetMaxRange   (int handle) const;
-    float            halGetResolution (int handle) const;
-    int              halGetMinDelay   (int handle) const;
-    int              halGetMaxDelay   (int handle) const;
-    int              halGetDelay      (int handle) const;
-    bool             halSetDelay      (int handle, int delay_ms);
-    bool             halGetActive     (int handle) const;
-    bool             halSetActive     (int handle, bool active);
+    sensors_event_t *eventForHandle(int handle) const;
+    int              indexForHandle(int handle) const;
+    int              indexForType  (int sensorType) const;
+    int              handleForType (int sensorType) const;
+    float            getMaxRange   (int handle) const;
+    float            getResolution (int handle) const;
+    int              getMinDelay   (int handle) const;
+    int              getMaxDelay   (int handle) const;
+    int              getDelay      (int handle) const;
+    bool             setDelay      (int handle, int delay_ms);
+    bool             getActive     (int handle) const;
+    bool             setActive     (int handle, bool active);
 
     /* - - - - - - - - - - - - - - - - - - - *
      * HybrisManager <--> sensorfwd
@@ -87,11 +87,11 @@ private:
     QMap <int, HybrisAdaptor *>   m_registeredAdaptors; // type -> obj
     struct sensors_module_t      *m_halModule;
     struct sensors_poll_device_t *m_halDevice;
-    int                           m_halSensorCount;
-    const struct sensor_t        *m_halSensorArray;   // [m_halSensorCount]
-    HybrisSensorState            *m_halSensorState;   // [m_halSensorCount]
-    QMap <int, int>               m_halIndexOfType;   // type   -> index
-    QMap <int, int>               m_halIndexOfHandle; // handle -> index
+    int                           m_sensorCount;
+    const struct sensor_t        *m_sensorArray;   // [m_sensorCount]
+    HybrisSensorState            *m_sensorState;   // [m_sensorCount]
+    QMap <int, int>               m_indexOfType;   // type   -> index
+    QMap <int, int>               m_indexOfHandle; // handle -> index
     pthread_t                     m_halEventReaderTid;
 
     friend class HybrisAdaptorReader;
