@@ -21,7 +21,6 @@
 #include "hybrisorientationadaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 
 /*
@@ -84,9 +83,14 @@ void HybrisOrientationAdaptor::processSample(const sensors_event_t& data)
 {
     CompassData *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
+#ifdef USE_BINDER
+    d->degrees_ = data.u.vec3.x; //azimuth
+    d->level_ = data.u.vec3.status;
+#else
     d->degrees_ = data.orientation.azimuth; //azimuth
-    d->rawDegrees_ = d->degrees_;
     d->level_ = data.orientation.status;
+#endif
+    d->rawDegrees_ = d->degrees_;
 
     buffer->commit();
     buffer->wakeUpReaders();
