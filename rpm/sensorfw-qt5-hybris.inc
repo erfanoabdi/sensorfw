@@ -1,5 +1,5 @@
 Summary:    Sensor Framework Qt5
-Version:    0.10.9
+Version:    0.10.10
 Release:    0
 Group:      System/Sensor Framework
 License:    LGPLv2+
