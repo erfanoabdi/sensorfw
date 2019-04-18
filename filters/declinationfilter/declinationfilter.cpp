@@ -35,7 +35,8 @@ const char* DeclinationFilter::declinationKey = "/system/osso/location/settings/
 
 DeclinationFilter::DeclinationFilter() :
         Filter<CompassData, DeclinationFilter, CompassData>(this, &DeclinationFilter::correct),
-        declinationCorrection_(0)
+        declinationCorrection_(0),
+        lastUpdate_(0)
 {
     updateInterval_ = SensorFrameworkConfig::configuration()->value<quint64>("compass/declination_update_interval", 1000 * 60 * 60) * 1000;
     loadSettings();

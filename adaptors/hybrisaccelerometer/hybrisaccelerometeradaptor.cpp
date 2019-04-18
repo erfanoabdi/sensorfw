@@ -21,7 +21,6 @@
 #include "hybrisaccelerometeradaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 
 #define GRAVITY_RECIPROCAL_THOUSANDS 101.971621298
@@ -66,9 +65,15 @@ void HybrisAccelerometerAdaptor::processSample(const sensors_event_t& data)
     d->timestamp_ = quint64(data.timestamp * .001);
     // sensorfw wants milli-G'
 
+#ifdef USE_BINDER
+    d->x_ = data.u.vec3.x * GRAVITY_RECIPROCAL_THOUSANDS;
+    d->y_ = data.u.vec3.y * GRAVITY_RECIPROCAL_THOUSANDS;
+    d->z_ = data.u.vec3.z * GRAVITY_RECIPROCAL_THOUSANDS;
+#else
     d->x_ = data.acceleration.x * GRAVITY_RECIPROCAL_THOUSANDS;
     d->y_ = data.acceleration.y * GRAVITY_RECIPROCAL_THOUSANDS;
     d->z_ = data.acceleration.z * GRAVITY_RECIPROCAL_THOUSANDS;
+#endif
 
     buffer->commit();
     buffer->wakeUpReaders();

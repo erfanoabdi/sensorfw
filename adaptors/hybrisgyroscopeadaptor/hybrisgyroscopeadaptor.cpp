@@ -21,7 +21,6 @@
 #include "hybrisgyroscopeadaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 #include <math.h>
 
@@ -73,9 +72,15 @@ void HybrisGyroscopeAdaptor::processSample(const sensors_event_t& data)
 
     TimedXyzData *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
+#ifdef USE_BINDER
+    d->x_ = (data.u.vec3.x) * RADIANS_TO_DEGREES * 1000;
+    d->y_ = (data.u.vec3.y) * RADIANS_TO_DEGREES * 1000;
+    d->z_ = (data.u.vec3.z) * RADIANS_TO_DEGREES * 1000;
+#else
     d->x_ = (data.gyro.x) * RADIANS_TO_DEGREES * 1000;
     d->y_ = (data.gyro.y) * RADIANS_TO_DEGREES * 1000;
     d->z_ = (data.gyro.z) * RADIANS_TO_DEGREES * 1000;
+#endif
     buffer->commit();
     buffer->wakeUpReaders();
 }

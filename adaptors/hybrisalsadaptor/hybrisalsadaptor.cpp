@@ -24,7 +24,6 @@
 #include "hybrisalsadaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 
 #include <fcntl.h>
@@ -129,7 +128,11 @@ void HybrisAlsAdaptor::processSample(const sensors_event_t& data)
 {
     TimedUnsigned *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
+#ifdef USE_BINDER
+    d->value_ = data.u.scalar;
+#else
     d->value_ = data.light;
+#endif
     lastLightValue = d->value_;
     buffer->commit();
     buffer->wakeUpReaders();

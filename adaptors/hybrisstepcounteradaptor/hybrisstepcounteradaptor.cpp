@@ -24,7 +24,6 @@
 #include "hybrisstepcounteradaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 
 #ifndef SENSOR_TYPE_STEP_COUNTER
@@ -81,12 +80,16 @@ void HybrisStepCounterAdaptor::processSample(const sensors_event_t& data)
 {
     TimedUnsigned *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
+#ifdef USE_BINDER
+    d->value_ = data.u.stepCount;
+#else
 #ifdef NO_SENSORS_EVENT_U64
     uint64_t value = 0;
     memcpy(&value, data.data, sizeof value);
     d->value_ = value;
 #else
     d->value_ = data.u64.step_counter;
+#endif
 #endif
     buffer->commit();
     buffer->wakeUpReaders();

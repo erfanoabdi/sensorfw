@@ -25,7 +25,6 @@
 #include "hybrisproximityadaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 #include <fcntl.h>
 #include <unistd.h>
@@ -138,11 +137,18 @@ void HybrisProximityAdaptor::processSample(const sensors_event_t& data)
     ProximityData *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
     bool near = false;
+#ifdef USE_BINDER
+    if (data.u.scalar < maxRange()) {
+        near = true;
+    }
+    d->value_ = data.u.scalar;
+#else
     if (data.distance < maxRange()) {
         near = true;
     }
-    d->withinProximity_ = near;
     d->value_ = data.distance;
+#endif
+    d->withinProximity_ = near;
 
     lastNearValue = near;
     buffer->commit();

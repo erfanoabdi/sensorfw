@@ -26,10 +26,16 @@
 #include <QTimer>
 #include <QFile>
 
-#include <pthread.h>
-
 #include "deviceadaptor.h"
+
+#ifdef USE_BINDER
+#include <gbinder.h>
+#include "hybrisbindertypes.h"
+#else
 #include <hardware/sensors.h>
+#include <pthread.h>
+#endif
+
 #define SENSORFW_MCE_WATCHER
 
 class HybrisAdaptor;
@@ -54,23 +60,25 @@ public:
 
     explicit HybrisManager(QObject *parent = 0);
     virtual ~HybrisManager();
+    void cleanup();
+    void initManager();
 
     /* - - - - - - - - - - - - - - - - - - - *
-     * android sensor hal functions
+     * android sensor functions
      * - - - - - - - - - - - - - - - - - - - */
 
-    sensors_event_t *halEventForHandle(int handle) const;
-    int              halIndexForHandle(int handle) const;
-    int              halIndexForType  (int sensorType) const;
-    int              halHandleForType (int sensorType) const;
-    float            halGetMaxRange   (int handle) const;
-    float            halGetResolution (int handle) const;
-    int              halGetMinDelay   (int handle) const;
-    int              halGetMaxDelay   (int handle) const;
-    int              halGetDelay      (int handle) const;
-    bool             halSetDelay      (int handle, int delay_ms);
-    bool             halGetActive     (int handle) const;
-    bool             halSetActive     (int handle, bool active);
+    sensors_event_t *eventForHandle(int handle) const;
+    int              indexForHandle(int handle) const;
+    int              indexForType  (int sensorType) const;
+    int              handleForType (int sensorType) const;
+    float            getMaxRange   (int handle) const;
+    float            getResolution (int handle) const;
+    int              getMinDelay   (int handle) const;
+    int              getMaxDelay   (int handle) const;
+    int              getDelay      (int handle) const;
+    bool             setDelay      (int handle, int delay_ms, bool force);
+    bool             getActive     (int handle) const;
+    bool             setActive     (int handle, bool active);
 
     /* - - - - - - - - - - - - - - - - - - - *
      * HybrisManager <--> sensorfwd
@@ -85,19 +93,46 @@ private:
     // fields
     bool                          m_initialized;
     QMap <int, HybrisAdaptor *>   m_registeredAdaptors; // type -> obj
+
+#ifdef USE_BINDER
+    // Binder backend
+    GBinderClient                *m_client;
+    gulong                        m_deathId;
+    gulong                        m_pollTransactId;
+    GBinderRemoteObject          *m_remote;
+    GBinderServiceManager        *m_serviceManager;
+    struct sensor_t              *m_sensorArray;   // [m_sensorCount]
+#else
+    // HAL backend
     struct sensors_module_t      *m_halModule;
     struct sensors_poll_device_t *m_halDevice;
-    int                           m_halSensorCount;
-    const struct sensor_t        *m_halSensorArray;   // [m_halSensorCount]
-    HybrisSensorState            *m_halSensorState;   // [m_halSensorCount]
-    QMap <int, int>               m_halIndexOfType;   // type   -> index
-    QMap <int, int>               m_halIndexOfHandle; // handle -> index
     pthread_t                     m_halEventReaderTid;
+    const struct sensor_t        *m_sensorArray;   // [m_sensorCount]
+#endif
+    int                           m_sensorCount;
+    HybrisSensorState            *m_sensorState;   // [m_sensorCount]
+    QMap <int, int>               m_indexOfType;   // type   -> index
+    QMap <int, int>               m_indexOfHandle; // handle -> index
+
+#ifdef USE_BINDER
+    void getSensorList();
+    void startConnect();
+    void finishConnect();
+    static void binderDied(GBinderRemoteObject *, void *user_data);
+    void pollEvents();
+    static void pollEventsCallback(
+        GBinderClient* /*client*/, GBinderRemoteReply* reply,
+        int status, void* userData);
+#endif
 
     friend class HybrisAdaptorReader;
 
+#ifndef USE_BINDER
 private:
     static void *halEventReaderThread(void *aptr);
+#endif
+    void processEvents(const sensors_event_t *buffer,
+        int numberOfEvents, bool &blockSuspend, bool &errorInInput);
 };
 
 class HybrisAdaptor : public DeviceAdaptor

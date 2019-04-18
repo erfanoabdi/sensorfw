@@ -25,14 +25,16 @@
 #include <QCoreApplication>
 #include <QTimer>
 
+#ifndef USE_BINDER
 #include <hardware/hardware.h>
-#include <hardware/sensors.h>
+#endif
 
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
 #include <signal.h>
+
 
 /* Older devices probably have old android hal and thus do
  * not define sensor all sensor types that have been added
@@ -123,6 +125,12 @@
 #endif
 #ifndef SENSOR_TYPE_WRIST_TILT_GESTURE
 #define SENSOR_TYPE_WRIST_TILT_GESTURE              (26)
+#endif
+
+#ifdef USE_BINDER
+#define SENSOR_BINDER_SERVICE_DEVICE "/dev/hwbinder"
+#define SENSOR_BINDER_SERVICE_IFACE "android.hardware.sensors@1.0::ISensors"
+#define SENSOR_BINDER_SERVICE_NAME  SENSOR_BINDER_SERVICE_IFACE "/default"
 #endif
 
 /* ========================================================================= *
@@ -217,15 +225,26 @@ HybrisManager::HybrisManager(QObject *parent)
     : QObject(parent)
     , m_initialized(false)
     , m_registeredAdaptors()
+#ifdef USE_BINDER
+    , m_client(NULL)
+    , m_deathId(0)
+    , m_pollTransactId(0)
+    , m_remote(NULL)
+    , m_serviceManager(NULL)
+#else
     , m_halModule(NULL)
     , m_halDevice(NULL)
-    , m_halSensorCount(0)
-    , m_halSensorArray(NULL)
-    , m_halSensorState(NULL)
-    , m_halIndexOfType()
-    , m_halIndexOfHandle()
     , m_halEventReaderTid(0)
+#endif
+    , m_sensorArray(NULL)
+    , m_sensorCount(0)
+    , m_sensorState(NULL)
+    , m_indexOfType()
+    , m_indexOfHandle()
 {
+#ifdef USE_BINDER
+    startConnect();
+#else
     int err;
 
     /* Open android sensor plugin */
@@ -246,45 +265,60 @@ HybrisManager::HybrisManager(QObject *parent)
     }
 
     /* Get static sensor information */
-    m_halSensorCount = m_halModule->get_sensors_list(m_halModule, &m_halSensorArray);
+    m_sensorCount = m_halModule->get_sensors_list(m_halModule, &m_sensorArray);
 
+    initManager();
+#endif
+}
+
+void HybrisManager::initManager()
+{
     /* Reserve space for sensor state data */
-    m_halSensorState = new HybrisSensorState[m_halSensorCount];
+    m_sensorState = new HybrisSensorState[m_sensorCount];
 
     /* Select and initialize sensors to be used */
-    for (int i = 0 ; i < m_halSensorCount ; i++) {
+    for (int i = 0 ; i < m_sensorCount ; i++) {
         /* Always do handle -> index mapping */
-        m_halIndexOfHandle.insert(m_halSensorArray[i].handle, i);
+        m_indexOfHandle.insert(m_sensorArray[i].handle, i);
 
         bool use = true;
         // Assumption: The primary sensor variants that we want to
         // use are listed before the secondary ones that we want
         // to ignore -> Use the 1st entry found for each sensor type.
-        if (m_halIndexOfType.contains(m_halSensorArray[i].type)) {
+        if (m_indexOfType.contains(m_sensorArray[i].type)) {
             use = false;
         }
 
         // some devices have compass and compass raw,
         // ignore compass raw. compass has range 360
-        if (m_halSensorArray[i].type == SENSOR_TYPE_ORIENTATION &&
-            m_halSensorArray[i].maxRange != 360) {
+        if (m_sensorArray[i].type == SENSOR_TYPE_ORIENTATION &&
+            m_sensorArray[i].maxRange != 360) {
             use = false;
         }
 
         sensordLogD() << Q_FUNC_INFO
             << (use ? "SELECT" : "IGNORE")
-            << "type:" << m_halSensorArray[i].type
-            << "name:" << (m_halSensorArray[i].name ?: "n/a");
+            << "type:" << m_sensorArray[i].type
+#ifdef USE_BINDER
+            << "name:" << (m_sensorArray[i].name.data.str ?: "n/a");
+#else
+            << "name:" << (m_sensorArray[i].name ?: "n/a");
+#endif
 
         if (use) {
             // min/max delay is specified in [us] -> convert to [ms]
-            int minDelay = (m_halSensorArray[i].minDelay + 999) / 1000;
+            int minDelay = (m_sensorArray[i].minDelay + 999) / 1000;
             int maxDelay = -1; // Assume: not defined by hal
 
+#ifdef USE_BINDER
+            maxDelay = (m_sensorArray[i].maxDelay + 999) / 1000;
+#else
 #ifdef SENSORS_DEVICE_API_VERSION_1_3
             if (m_halDevice->common.version >= SENSORS_DEVICE_API_VERSION_1_3)
-                maxDelay = (m_halSensorArray[i].maxDelay + 999) / 1000;
+                maxDelay = (m_sensorArray[i].maxDelay + 999) / 1000;
 #endif
+#endif
+
             /* If HAL does not define maximum delay, we need to invent
              * something that a) allows sensorfwd logic to see a range
              * instead of a point, b) is unlikely to be wrong enough to
@@ -292,6 +326,7 @@ HybrisManager::HybrisManager(QObject *parent)
              *
              * For now use: minDelay * 2, but at least 1000 ms.
              */
+
             if (maxDelay < 0 && minDelay > 0) {
                 maxDelay = (minDelay < 500) ? 1000 : (minDelay * 2);
                 sensordLogD("hal does not specify maxDelay, fallback: %d ms",
@@ -315,35 +350,46 @@ HybrisManager::HybrisManager(QObject *parent)
                 else if (delay > maxDelay )
                     delay = maxDelay;
 
-                m_halSensorState[i].m_minDelay = minDelay;
-                m_halSensorState[i].m_maxDelay = maxDelay;
+                m_sensorState[i].m_minDelay = minDelay;
+                m_sensorState[i].m_maxDelay = maxDelay;
 
-                halSetActive(m_halSensorArray[i].handle, true);
-                halSetDelay(m_halSensorArray[i].handle, delay);
+                setDelay(m_sensorArray[i].handle, delay, true);
+                setActive(m_sensorArray[i].handle, true);
+                setDelay(m_sensorArray[i].handle, delay, false);
 
                 sensordLogD("delay = %d [%d, %d]",
-                            m_halSensorState[i].m_delay,
-                            m_halSensorState[i].m_minDelay,
-                            m_halSensorState[i].m_maxDelay);
+                            m_sensorState[i].m_delay,
+                            m_sensorState[i].m_minDelay,
+                            m_sensorState[i].m_maxDelay);
             }
-            m_halIndexOfType.insert(m_halSensorArray[i].type, i);
+            m_indexOfType.insert(m_sensorArray[i].type, i);
 
             /* Set sane fallback values for select sensors in case the
              * hal does not report initial values. */
-            sensors_event_t *eve = &m_halSensorState[i].m_fallbackEvent;
-            eve->version = sizeof *eve;
-            eve->sensor  = m_halSensorArray[i].handle;
-            eve->type    = m_halSensorArray[i].type;
 
-            switch (m_halSensorArray[i].type) {
+            sensors_event_t *eve = &m_sensorState[i].m_fallbackEvent;
+#ifndef USE_BINDER
+            eve->version = sizeof *eve;
+#endif
+            eve->sensor  = m_sensorArray[i].handle;
+            eve->type    = m_sensorArray[i].type;
+            switch (m_sensorArray[i].type) {
             case SENSOR_TYPE_LIGHT:
                 // Roughly indoor lightning
+#ifdef USE_BINDER
+                eve->u.scalar = 400;
+#else
                 eve->light = 400;
+#endif
                 break;
 
             case SENSOR_TYPE_PROXIMITY:
                 // Not-covered
-                eve->distance = m_halSensorArray[i].maxRange;
+#ifdef USE_BINDER
+                eve->u.scalar = m_sensorArray[i].maxRange;
+#else
+                eve->distance = m_sensorArray[i].maxRange;
+#endif
                 break;
             default:
                 eve->sensor  = 0;
@@ -353,9 +399,13 @@ HybrisManager::HybrisManager(QObject *parent)
         }
 
         /* Make sure all sensors are initially in stopped state */
-        halSetActive(m_halSensorArray[i].handle, false);
+        setActive(m_sensorArray[i].handle, false);
     }
 
+#ifdef USE_BINDER
+    pollEvents();
+#else
+    int err;
     /* Start android sensor event reader */
     err = pthread_create(&m_halEventReaderTid, 0, halEventReaderThread, this);
     if (err) {
@@ -366,15 +416,56 @@ HybrisManager::HybrisManager(QObject *parent)
     sensordLogD() << "Hal reader thread started";
 
     m_initialized = true;
+#endif
 }
 
 HybrisManager::~HybrisManager()
+{
+    cleanup();
+
+#ifdef USE_BINDER
+    if (m_serviceManager) {
+        gbinder_servicemanager_unref(m_serviceManager);
+        m_serviceManager = NULL;
+    }
+#endif
+}
+
+void HybrisManager::cleanup()
 {
     sensordLogD() << "stop all sensors";
     foreach (HybrisAdaptor *adaptor, m_registeredAdaptors.values()) {
         adaptor->stopSensor();
     }
+#ifdef USE_BINDER
+    if (m_pollTransactId) {
+        gbinder_client_cancel(m_client, m_pollTransactId);
+        m_pollTransactId = 0;
+    }
 
+    if (m_client) {
+        gbinder_client_unref(m_client);
+        m_client = NULL;
+    }
+
+    if (m_remote) {
+        if (m_deathId) {
+            gbinder_remote_object_remove_handler(m_remote, m_deathId);
+            m_deathId = 0;
+        }
+        gbinder_remote_object_unref(m_remote);
+        m_remote = NULL;
+    }
+
+    for (int i = 0 ; i < m_sensorCount ; i++) {
+        g_free((void*)m_sensorArray[i].name.data.str);
+        g_free((void*)m_sensorArray[i].vendor.data.str);
+        g_free((void*)m_sensorArray[i].typeAsString.data.str);
+        g_free((void*)m_sensorArray[i].requiredPermission.data.str);
+    }
+    delete[] m_sensorArray;
+    m_sensorArray = NULL;
+#else
     if (m_halDevice) {
         sensordLogD() << "close sensor device";
         int errorCode = sensors_close(m_halDevice);
@@ -411,7 +502,11 @@ HybrisManager::~HybrisManager()
             _exit(EXIT_FAILURE);
         }
     }
-    delete[] m_halSensorState;
+#endif
+    delete[] m_sensorState;
+    m_sensorState = NULL;
+    m_sensorCount = 0;
+    m_initialized = false;
 }
 
 HybrisManager *HybrisManager::instance()
@@ -420,33 +515,163 @@ HybrisManager *HybrisManager::instance()
     return priv;
 }
 
-int HybrisManager::halHandleForType(int sensorType) const
+#ifdef USE_BINDER
+
+void HybrisManager::getSensorList()
 {
-    int index = halIndexForType(sensorType);
-    return (index < 0) ? -1 : m_halSensorArray[index].handle;
+    sensordLogD() << "Get sensor list";
+    GBinderReader reader;
+    GBinderRemoteReply *reply;
+    int status;
+
+    reply = gbinder_client_transact_sync_reply(m_client, GET_SENSORS_LIST, NULL, &status);
+
+    if (status != GBINDER_STATUS_OK) {
+        sensordLogW() << "Unable to get sensor list: status " << status;
+        cleanup();
+        sleep(1);
+        startConnect();
+        return;
+    }
+
+    gbinder_remote_reply_init_reader(reply, &reader);
+    gbinder_reader_read_int32(&reader, &status);
+    gsize count = 0;
+    gsize vecSize = 0;
+    sensor_t *vec = (sensor_t *)gbinder_reader_read_hidl_vec(&reader, &count, &vecSize);
+
+    m_sensorCount = count;
+    m_sensorArray = new sensor_t[m_sensorCount];
+    for (int i = 0 ; i < m_sensorCount ; i++) {
+        memcpy(&m_sensorArray[i], &vec[i], sizeof(sensor_t));
+
+        // Read strings
+        GBinderBuffer *buffer = gbinder_reader_read_buffer(&reader);
+        m_sensorArray[i].name.data.str = g_strdup((const gchar *)buffer->data);
+        m_sensorArray[i].name.len = buffer->size;
+        m_sensorArray[i].name.owns_buffer = true;
+        gbinder_buffer_free(buffer);
+
+        buffer = gbinder_reader_read_buffer(&reader);
+        m_sensorArray[i].vendor.data.str = g_strdup((const gchar *)buffer->data);
+        m_sensorArray[i].vendor.len = buffer->size;
+        m_sensorArray[i].vendor.owns_buffer = true;
+        gbinder_buffer_free(buffer);
+
+        buffer = gbinder_reader_read_buffer(&reader);
+        m_sensorArray[i].typeAsString.data.str = g_strdup((const gchar *)buffer->data);
+        m_sensorArray[i].typeAsString.len = buffer->size;
+        m_sensorArray[i].typeAsString.owns_buffer = true;
+        gbinder_buffer_free(buffer);
+
+        buffer = gbinder_reader_read_buffer(&reader);
+        m_sensorArray[i].requiredPermission.data.str = g_strdup((const gchar *)buffer->data);
+        m_sensorArray[i].requiredPermission.len = buffer->size;
+        m_sensorArray[i].requiredPermission.owns_buffer = true;
+        gbinder_buffer_free(buffer);
+    }
+    gbinder_remote_reply_unref(reply);
+
+    initManager();
+
+    m_initialized = true;
+    sensordLogW() << "Hybris sensor manager initialized";
 }
 
-sensors_event_t *HybrisManager::halEventForHandle(int handle) const
+void HybrisManager::binderDied(GBinderRemoteObject *, void *user_data)
+{
+    HybrisManager *conn =
+                    static_cast<HybrisManager *>(user_data);
+    sensordLogW() << "Sensor service died! Trying to reconnect.";
+    conn->cleanup();
+    conn->startConnect();
+}
+
+void HybrisManager::startConnect()
+{
+    if (!m_serviceManager) {
+        m_serviceManager = gbinder_servicemanager_new(SENSOR_BINDER_SERVICE_DEVICE);
+    }
+
+    if (gbinder_servicemanager_wait(m_serviceManager, -1)) {
+        finishConnect();
+    } else {
+        sensordLogW() << "Could not get service manager for sensor service";
+        cleanup();
+    }
+}
+
+void HybrisManager::finishConnect()
+{
+    m_remote = gbinder_servicemanager_get_service_sync(m_serviceManager,
+                                    SENSOR_BINDER_SERVICE_NAME, NULL);
+    if (!m_remote) {
+        sensordLogD() << "Could not find remote object for sensor service. Trying to reconnect.";
+    } else {
+        gbinder_remote_object_ref(m_remote);
+        sensordLogD() << "Connected to sensor service";
+        m_deathId = gbinder_remote_object_add_death_handler(m_remote, binderDied,
+                        this);
+        m_client = gbinder_client_new(m_remote, SENSOR_BINDER_SERVICE_IFACE);
+        if (!m_client) {
+            sensordLogD() << "Could not create client for sensor service. Trying to reconnect.";
+        } else {
+            // Sometimes sensor service has lingering connetion from
+            // previous client which causes sensor service to restart
+            // and we need to test with poll if remote is really working.
+            GBinderRemoteReply *reply;
+            GBinderLocalRequest *req = gbinder_client_new_request(m_client);
+            int32_t status;
+
+            // Empty poll to test if remote is working
+            req = gbinder_local_request_append_int32(req, 0);
+
+            reply = gbinder_client_transact_sync_reply(m_client, POLL, req, &status);
+            gbinder_local_request_unref(req);
+            gbinder_remote_reply_unref(reply);
+
+            if (status != GBINDER_STATUS_OK) {
+                sensordLogW() << "Poll failed with status" << status << ". Trying to reconnect.";
+            } else {
+                getSensorList();
+                return;
+            }
+        }
+    }
+    // On failure cleanup and wait before reconnecting
+    cleanup();
+    sleep(1);
+    startConnect();
+}
+#endif //USE_BINDER
+
+int HybrisManager::handleForType(int sensorType) const
+{
+    int index = indexForType(sensorType);
+    return (index < 0) ? -1 : m_sensorArray[index].handle;
+}
+
+sensors_event_t *HybrisManager::eventForHandle(int handle) const
 {
     sensors_event_t *event = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
     if (index != -1) {
-        event = &m_halSensorState[index].m_fallbackEvent;
+        event = &m_sensorState[index].m_fallbackEvent;
     }
     return event;
 }
 
-int HybrisManager::halIndexForHandle(int handle) const
+int HybrisManager::indexForHandle(int handle) const
 {
-    int index = m_halIndexOfHandle.value(handle, -1);
+    int index = m_indexOfHandle.value(handle, -1);
     if (index == -1)
         sensordLogW("HYBRIS CTL invalid sensor handle: %d", handle);
     return index;
 }
 
-int HybrisManager::halIndexForType(int sensorType) const
+int HybrisManager::indexForType(int sensorType) const
 {
-    int index = m_halIndexOfType.value(sensorType, -1);
+    int index = m_indexOfType.value(sensorType, -1);
     if (index == -1)
         sensordLogW("HYBRIS CTL invalid sensor type: %d", sensorType);
     return index;
@@ -456,7 +681,7 @@ void HybrisManager::startReader(HybrisAdaptor *adaptor)
 {
     if (m_registeredAdaptors.values().contains(adaptor)) {
         sensordLogD() << "activating " << adaptor->name() << adaptor->m_sensorHandle;
-        if (!halSetActive(adaptor->m_sensorHandle, true)) {
+        if (!setActive(adaptor->m_sensorHandle, true)) {
             sensordLogW() <<Q_FUNC_INFO<< "failed";
             adaptor->setValid(false);
         }
@@ -467,7 +692,7 @@ void HybrisManager::stopReader(HybrisAdaptor *adaptor)
 {
     if (m_registeredAdaptors.values().contains(adaptor)) {
             sensordLogD() << "deactivating " << adaptor->name();
-            if (!halSetActive(adaptor->m_sensorHandle, false)) {
+            if (!setActive(adaptor->m_sensorHandle, false)) {
                 sensordLogW() <<Q_FUNC_INFO<< "failed";
             }
     }
@@ -489,13 +714,13 @@ void HybrisManager::registerAdaptor(HybrisAdaptor *adaptor)
     }
 }
 
-float HybrisManager::halGetMaxRange(int handle) const
+float HybrisManager::getMaxRange(int handle) const
 {
     float range = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
 
         range = sensor->maxRange;
         sensordLogT("HYBRIS CTL getMaxRange(%d=%s) -> %g",
@@ -505,13 +730,13 @@ float HybrisManager::halGetMaxRange(int handle) const
     return range;
 }
 
-float HybrisManager::halGetResolution(int handle) const
+float HybrisManager::getResolution(int handle) const
 {
     float resolution = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
 
         resolution = sensor->resolution;
         sensordLogT("HYBRIS CTL getResolution(%d=%s) -> %g",
@@ -521,14 +746,14 @@ float HybrisManager::halGetResolution(int handle) const
     return resolution;
 }
 
-int HybrisManager::halGetMinDelay(int handle) const
+int HybrisManager::getMinDelay(int handle) const
 {
     int delay = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         delay = state->m_minDelay;
         sensordLogT("HYBRIS CTL getMinDelay(%d=%s) -> %d",
@@ -538,14 +763,14 @@ int HybrisManager::halGetMinDelay(int handle) const
     return delay;
 }
 
-int HybrisManager::halGetMaxDelay(int handle) const
+int HybrisManager::getMaxDelay(int handle) const
 {
     int delay = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         delay = state->m_maxDelay;
         sensordLogT("HYBRIS CTL getMaxDelay(%d=%s) -> %d",
@@ -555,14 +780,14 @@ int HybrisManager::halGetMaxDelay(int handle) const
     return delay;
 }
 
-int HybrisManager::halGetDelay(int handle) const
+int HybrisManager::getDelay(int handle) const
 {
     int delay = 0;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         delay = state->m_delay;
         sensordLogT("HYBRIS CTL getDelay(%d=%s) -> %d",
@@ -572,21 +797,49 @@ int HybrisManager::halGetDelay(int handle) const
     return delay;
 }
 
-bool HybrisManager::halSetDelay(int handle, int delay_ms)
+bool HybrisManager::setDelay(int handle, int delay_ms, bool force)
 {
     bool success = false;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
-        if (state->m_delay == delay_ms) {
+        if (!force && state->m_delay == delay_ms) {
             sensordLogT("HYBRIS CTL setDelay(%d=%s, %d) -> no-change",
                         sensor->handle, sensorTypeName(sensor->type), delay_ms);
         } else {
             int64_t delay_ns = delay_ms * 1000LL * 1000LL;
+#ifdef USE_BINDER
+            int error;
+            GBinderLocalRequest *req = gbinder_client_new_request(m_client);
+            GBinderRemoteReply *reply;
+            GBinderReader reader;
+            GBinderWriter writer;
+            int32_t status;
+
+            gbinder_local_request_init_writer(req, &writer);
+
+            gbinder_writer_append_int32(&writer, sensor->handle);
+            gbinder_writer_append_int64(&writer, delay_ns);
+            gbinder_writer_append_int64(&writer, 0);
+
+            reply = gbinder_client_transact_sync_reply(m_client, BATCH, req, &status);
+            gbinder_local_request_unref(req);
+
+            if (status != GBINDER_STATUS_OK) {
+                sensordLogW() << "Set delay failed status " << status;
+                return false;
+            }
+            gbinder_remote_reply_init_reader(reply, &reader);
+            gbinder_reader_read_int32(&reader, &status);
+            gbinder_reader_read_int32(&reader, &error);
+
+            gbinder_remote_reply_unref(reply);
+#else
             int error = m_halDevice->setDelay(m_halDevice, sensor->handle, delay_ns);
+#endif
             if (error) {
                 sensordLogW("HYBRIS CTL setDelay(%d=%s, %d) -> %d=%s",
                             sensor->handle, sensorTypeName(sensor->type), delay_ms,
@@ -603,14 +856,14 @@ bool HybrisManager::halSetDelay(int handle, int delay_ms)
     return success;
 }
 
-bool HybrisManager::halGetActive(int handle) const
+bool HybrisManager::getActive(int handle) const
 {
     bool active = false;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         active = (state->m_active > 0);
         sensordLogT("HYBRIS CTL getActive(%d=%s) -> %s",
@@ -620,21 +873,54 @@ bool HybrisManager::halGetActive(int handle) const
     return active;
 }
 
-bool HybrisManager::halSetActive(int handle, bool active)
+bool HybrisManager::setActive(int handle, bool active)
 {
     bool success = false;
-    int index = halIndexForHandle(handle);
+    int index = indexForHandle(handle);
 
     if (index != -1) {
-        const struct sensor_t *sensor = &m_halSensorArray[index];
-        HybrisSensorState     *state  = &m_halSensorState[index];
+        const struct sensor_t *sensor = &m_sensorArray[index];
+        HybrisSensorState     *state  = &m_sensorState[index];
 
         if (state->m_active == active) {
             sensordLogT("HYBRIS CTL setActive%d=%s, %s) -> no-change",
                         sensor->handle, sensorTypeName(sensor->type), active ? "true" : "false");
             success = true;
         } else {
+#ifdef USE_BINDER
+            if (active && state->m_delay != -1) {
+                sensordLogD("HYBRIS CTL FORCE PRE UPDATE %i, %s", sensor->handle, sensorTypeName(sensor->type));
+                int delay_ms = state->m_delay;
+                state->m_delay = -1;
+                setDelay(handle, delay_ms, true);
+            }
+            int error;
+            GBinderLocalRequest *req = gbinder_client_new_request(m_client);
+            GBinderRemoteReply *reply;
+            GBinderReader reader;
+            GBinderWriter writer;
+            int32_t status;
+
+            gbinder_local_request_init_writer(req, &writer);
+
+            gbinder_writer_append_int32(&writer, sensor->handle);
+            gbinder_writer_append_int32(&writer, active);
+
+            reply = gbinder_client_transact_sync_reply(m_client, ACTIVATE, req, &status);
+            gbinder_local_request_unref(req);
+
+            if (status != GBINDER_STATUS_OK) {
+                sensordLogW() << "Activate failed status " << status;
+                return false;
+            }
+            gbinder_remote_reply_init_reader(reply, &reader);
+            gbinder_reader_read_int32(&reader, &status);
+            gbinder_reader_read_int32(&reader, &error);
+
+            gbinder_remote_reply_unref(reply);
+#else
             int error = m_halDevice->activate(m_halDevice, sensor->handle, active);
+#endif
             if (error) {
                 sensordLogW("HYBRIS CTL setActive%d=%s, %s) -> %d=%s",
                             sensor->handle, sensorTypeName(sensor->type), active ? "true" : "false",
@@ -645,22 +931,84 @@ bool HybrisManager::halSetActive(int handle, bool active)
                 state->m_active = active;
                 success = true;
             }
+#ifndef USE_BINDER
             if (state->m_active == true && state->m_delay != -1) {
                 sensordLogD("HYBRIS CTL FORCE DELAY UPDATE");
                 int delay_ms = state->m_delay;
                 state->m_delay = -1;
-                halSetDelay(handle, delay_ms);
+                setDelay(handle, delay_ms, false);
             }
+#endif
         }
     }
     return success;
 }
+
+#ifdef USE_BINDER
+/**
+ * pollEvents is only called during initialization and after that from pollEventsCallback
+ * triggered by binder reply so there is only maximum of one active poll at all times
+ */
+void HybrisManager::pollEvents()
+{
+    if (m_client) {
+        GBinderLocalRequest *req = gbinder_client_new_request(m_client);
+
+        req = gbinder_local_request_append_int32(req, 16); // Same number as for HAL
+
+        m_pollTransactId = gbinder_client_transact(m_client, POLL, 0, req, pollEventsCallback, 0, this);
+        gbinder_local_request_unref(req);
+    }
+}
+
+void HybrisManager::pollEventsCallback(
+    GBinderClient* /*client*/,
+    GBinderRemoteReply* reply,
+    int status,
+    void* userData)
+{
+    HybrisManager *manager = static_cast<HybrisManager *>(userData);
+    bool blockSuspend = false;
+    bool errorInInput = false;
+    GBinderReader reader;
+    int32_t readerStatus;
+    int32_t result;
+    sensors_event_t *buffer;
+
+    manager->m_pollTransactId = 0;
+
+    if (status != GBINDER_STATUS_OK) {
+        sensordLogW() << "Poll failed status " << status;
+        // In case of binder failure sleep a little before attempting a new poll
+        struct timespec ts = { 0, 50 * 1000 * 1000 }; // 50 ms
+        do { } while (nanosleep(&ts, &ts) == -1 && errno == EINTR);
+    } else {
+        // Read sensor events from reply
+        gbinder_remote_reply_init_reader(reply, &reader);
+        gbinder_reader_read_int32(&reader, &readerStatus);
+        gbinder_reader_read_int32(&reader, &result);
+        gsize structSize = 0;
+        gsize eventCount = 0;
+
+        buffer = (sensors_event_t *)gbinder_reader_read_hidl_vec(&reader, &eventCount , &structSize);
+        manager->processEvents(buffer, eventCount, blockSuspend, errorInInput);
+
+        if (blockSuspend) {
+            ObtainTemporaryWakeLock();
+        }
+    }
+    // Initiate new poll
+    manager->pollEvents();
+}
+
+#else
 
 void *HybrisManager::halEventReaderThread(void *aptr)
 {
     HybrisManager *manager = static_cast<HybrisManager *>(aptr);
     static const size_t numEvents = 16;
     sensors_event_t buffer[numEvents];
+
     /* Async cancellation, but disabled */
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0);
@@ -686,27 +1034,8 @@ void *HybrisManager::halEventReaderThread(void *aptr)
         /* Process received events */
         bool blockSuspend = false;
         bool errorInInput = false;
-        for (int i = 0; i < numberOfEvents; i++) {
-            const sensors_event_t& data = buffer[i];
+        manager->processEvents(buffer, numberOfEvents, blockSuspend, errorInInput);
 
-            sensordLogT("HYBRIS EVE %s", sensorTypeName(data.type));
-
-            /* Got data -> Clear the no longer needed fallback event */
-            sensors_event_t *fallback = manager->halEventForHandle(data.sensor);
-            if (fallback && fallback->type == data.type && fallback->sensor == data.sensor) {
-                fallback->type = fallback->sensor = 0;
-            }
-
-            if (data.version != sizeof(sensors_event_t)) {
-                sensordLogW()<< QString("incorrect event version (version=%1, expected=%2").arg(data.version).arg(sizeof(sensors_event_t));
-                errorInInput = true;
-            }
-            if (data.type == SENSOR_TYPE_PROXIMITY) {
-                blockSuspend = true;
-            }
-            // FIXME: is this thread safe?
-            manager->processSample(data);
-        }
         /* Suspend proof sensor reporting that could occur in display off */
         if (blockSuspend) {
             ObtainTemporaryWakeLock();
@@ -718,6 +1047,37 @@ void *HybrisManager::halEventReaderThread(void *aptr)
         }
     }
     return 0;
+}
+#endif
+
+void HybrisManager::processEvents(const sensors_event_t *buffer, int numberOfEvents, bool &blockSuspend, bool &errorInInput)
+{
+    for (int i = 0; i < numberOfEvents; i++) {
+        const sensors_event_t& data = buffer[i];
+
+        sensordLogT("HYBRIS EVE %s", sensorTypeName(data.type));
+
+        /* Got data -> Clear the no longer needed fallback event */
+        sensors_event_t *fallback = eventForHandle(data.sensor);
+        if (fallback && fallback->type == data.type && fallback->sensor == data.sensor) {
+            fallback->type = fallback->sensor = 0;
+        }
+
+#ifdef USE_BINDER
+        Q_UNUSED(errorInInput);
+#else
+        if (data.version != sizeof(sensors_event_t)) {
+            sensordLogW()<< QString("incorrect event version (version=%1, expected=%2").arg(data.version).arg(sizeof(sensors_event_t));
+            errorInInput = true;
+        }
+#endif
+
+        if (data.type == SENSOR_TYPE_PROXIMITY) {
+            blockSuspend = true;
+        }
+        // FIXME: is this thread safe?
+        processSample(data);
+    }
 }
 
 /* ========================================================================= *
@@ -732,7 +1092,7 @@ HybrisAdaptor::HybrisAdaptor(const QString& id, int type)
     , m_sensorHandle(-1)
     , m_sensorType(type)
 {
-    m_sensorHandle = hybrisManager()->halHandleForType(m_sensorType);
+    m_sensorHandle = hybrisManager()->handleForType(m_sensorType);
     if (m_sensorHandle == -1) {
         sensordLogW() << Q_FUNC_INFO <<"no such sensor" << id;
         setValid(false);
@@ -789,12 +1149,12 @@ qreal HybrisAdaptor::minRange() const
 
 qreal HybrisAdaptor::maxRange() const
 {
-    return hybrisManager()->halGetMaxRange(m_sensorHandle);
+    return hybrisManager()->getMaxRange(m_sensorHandle);
 }
 
 qreal HybrisAdaptor::resolution() const
 {
-    return hybrisManager()->halGetResolution(m_sensorHandle);
+    return hybrisManager()->getResolution(m_sensorHandle);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -803,30 +1163,30 @@ qreal HybrisAdaptor::resolution() const
 
 unsigned int HybrisAdaptor::minInterval() const
 {
-    return hybrisManager()->halGetMinDelay(m_sensorHandle);
+    return hybrisManager()->getMinDelay(m_sensorHandle);
 }
 
 unsigned int HybrisAdaptor::maxInterval() const
 {
-    return hybrisManager()->halGetMaxDelay(m_sensorHandle);
+    return hybrisManager()->getMaxDelay(m_sensorHandle);
 }
 
 unsigned int HybrisAdaptor::interval() const
 {
-    return hybrisManager()->halGetDelay(m_sensorHandle);
+    return hybrisManager()->getDelay(m_sensorHandle);
 }
 
 bool HybrisAdaptor::setInterval(const unsigned int value, const int sessionId)
 {
     Q_UNUSED(sessionId);
 
-    bool ok = hybrisManager()->halSetDelay(m_sensorHandle, value);
+    bool ok = hybrisManager()->setDelay(m_sensorHandle, value, false);
 
     if (!ok) {
         sensordLogW() << Q_FUNC_INFO << "setInterval not ok";
     } else {
         /* If we have not yet received sensor data, apply fallback value */
-        sensors_event_t *fallback = hybrisManager()->halEventForHandle(m_sensorHandle);
+        sensors_event_t *fallback = hybrisManager()->eventForHandle(m_sensorHandle);
         if (fallback && fallback->sensor == m_sensorHandle && fallback->type == m_sensorType) {
             sensordLogT("HYBRIS FALLBACK type:%s sensor:%d",
                         sensorTypeName(fallback->type),
@@ -913,7 +1273,7 @@ void HybrisAdaptor::evaluateSensor()
             }
 
             /* If we have not yet received sensor data, apply fallback value */
-            sensors_event_t *fallback = hybrisManager()->halEventForHandle(m_sensorHandle);
+            sensors_event_t *fallback = hybrisManager()->eventForHandle(m_sensorHandle);
             if (fallback && fallback->sensor == m_sensorHandle && fallback->type == m_sensorType) {
                 sensordLogT("HYBRIS FALLBACK type:%s sensor:%d",
                             sensorTypeName(fallback->type),

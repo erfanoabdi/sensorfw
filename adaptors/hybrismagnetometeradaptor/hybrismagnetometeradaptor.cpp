@@ -21,7 +21,6 @@
 #include "hybrismagnetometeradaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 
 HybrisMagnetometerAdaptor::HybrisMagnetometerAdaptor(const QString& id) :
@@ -68,6 +67,16 @@ void HybrisMagnetometerAdaptor::processSample(const sensors_event_t& data)
 {
     CalibratedMagneticFieldData *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
+
+#ifdef USE_BINDER
+    d->x_ = data.u.vec3.x * 1000;
+    d->y_ = data.u.vec3.y * 1000;
+    d->z_ = data.u.vec3.z * 1000;
+    d->rx_ = data.u.vec3.x * 1000;
+    d->ry_ = data.u.vec3.y * 1000;
+    d->rz_ = data.u.vec3.z * 1000;
+    d->level_= data.u.vec3.status;
+#else
     //uT
     d->x_ = (data.magnetic.x * 1000);
     d->y_ = (data.magnetic.y * 1000);
@@ -81,7 +90,7 @@ void HybrisMagnetometerAdaptor::processSample(const sensors_event_t& data)
     d->rx_ = data.magnetic.x * 1000;
     d->ry_ = data.magnetic.y * 1000;
     d->rz_ = data.magnetic.z * 1000;
-
+#endif
 #endif
     buffer->commit();
     buffer->wakeUpReaders();

@@ -26,7 +26,6 @@
 #include "hybrispressureadaptor.h"
 #include "logging.h"
 #include "datatypes/utils.h"
-#include <hardware/sensors.h>
 #include "config.h"
 
 HybrisPressureAdaptor::HybrisPressureAdaptor(const QString& id) :
@@ -70,7 +69,11 @@ void HybrisPressureAdaptor::processSample(const sensors_event_t& data)
 {
     TimedUnsigned *d = buffer->nextSlot();
     d->timestamp_ = quint64(data.timestamp * .001);
+#ifdef USE_BINDER
+    d->value_ = data.u.scalar * 100;//From hPa to Pa
+#else
     d->value_ = data.pressure * 100;//From hPa to Pa
+#endif
     buffer->commit();
     buffer->wakeUpReaders();
 }
