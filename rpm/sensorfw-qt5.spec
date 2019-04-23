@@ -7,6 +7,7 @@ License:    LGPLv2+
 URL:        http://gitorious.org/sensorfw
 Source0:    %{name}-%{version}.tar.bz2
 Source1:    sensorfwd.service
+Source2:    sensorfw-qt5-hybris.inc
 Requires:   qt5-qtcore
 Requires:   sensord-configs
 Requires:   systemd
