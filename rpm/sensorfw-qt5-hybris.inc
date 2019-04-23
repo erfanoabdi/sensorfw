@@ -8,6 +8,7 @@ Source0:    %{name}-%{version}.tar.bz2
 # Eventhough this is not really needed we have this here
 # as this is added to packaging dir by tar_git.
 Source2:    sensorfwd.service
+Source3:    sensorfw-qt5-hybris.inc
 Requires:   sensord-qt5
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
