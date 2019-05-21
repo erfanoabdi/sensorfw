@@ -11,6 +11,12 @@ ExecStart=/usr/sbin/sensorfwd -c=/etc/sensorfw/primaryuse.conf --systemd --log-l
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=1
+# Sandboxing
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_FOWNER
+PrivateNetwork=true
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
 
 [Install]
 WantedBy=graphical.target
