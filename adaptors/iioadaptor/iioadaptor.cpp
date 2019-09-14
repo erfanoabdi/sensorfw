@@ -45,6 +45,7 @@
 #include <QTimer>
 #include <QDirIterator>
 #include <qmath.h>
+#include <QRegularExpression>
 
 #include <deviceadaptor.h>
 #include "datatypes/orientationdata.h"
@@ -84,6 +85,7 @@ void IioAdaptor::setup()
         const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
 
+        iioDevice.channelTypeName = "accel";
         devNodeNumber = findSensor(inputMatch);
         if (devNodeNumber!= -1) {
             const QString desc = "Industrial I/O accelerometer (" + iioDevice.name +")";
@@ -99,6 +101,7 @@ void IioAdaptor::setup()
         const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
 
+        iioDevice.channelTypeName = "anglvel";
         devNodeNumber = findSensor(inputMatch);
         if (devNodeNumber!= -1) {
             const QString desc = "Industrial I/O gyroscope (" + iioDevice.name +")";
@@ -113,8 +116,8 @@ void IioAdaptor::setup()
         const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
 
+        iioDevice.channelTypeName = "magn";
         devNodeNumber = findSensor(inputMatch);
-
         if (devNodeNumber!= -1) {
             const QString desc = "Industrial I/O magnetometer (" + iioDevice.name +")";
             magnetometerBuffer_ = new DeviceAdaptorRingBuffer<CalibratedMagneticFieldData>(1);
@@ -127,6 +130,7 @@ void IioAdaptor::setup()
         const QString name = "als";
         const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
 
+        iioDevice.channelTypeName = "illuminance";
         devNodeNumber = findSensor(inputMatch);
         if (devNodeNumber!= -1) {
             QString desc = "Industrial I/O light sensor (" + iioDevice.name +")";
@@ -142,7 +146,7 @@ void IioAdaptor::setup()
 //        setValid(false);
         return;
     }
-    iioDevice.channels = scanElementsEnable(devNodeNumber,1);
+    scanElementsEnable(devNodeNumber,1);
     scanElementsEnable(devNodeNumber,0);
 
     /* Override the scaling factor if asked */
@@ -203,13 +207,13 @@ int IioAdaptor::findSensor(const QString &sensorName)
                     qDebug() << "attr" << name << value;
 
                     QString attributeName(name);
-                    if (attributeName.endsWith("scale")) {
+                    if (attributeName.contains(QRegularExpression(iioDevice.channelTypeName + ".*scale$"))) {
                         iioDevice.scale = QString(value).toDouble(&ok);
                         if (ok) {
                          //   scale = num;
                             qDebug() << "scale is" << iioDevice.scale;
                         }
-                    } else if (attributeName.endsWith("offset")) {
+                    } else if (attributeName.contains(QRegularExpression(iioDevice.channelTypeName + ".*offset$"))) {
                         iioDevice.offset = QString(value).toDouble(&ok);
                         if (ok)
                         qDebug() << "offset is" << value;
@@ -218,13 +222,14 @@ int IioAdaptor::findSensor(const QString &sensorName)
                         if (ok)
                        //     frequency = num;
                         qDebug() << "frequency is" << iioDevice.frequency;
-                    } else if (attributeName.endsWith("raw")) {
+                    } else if (attributeName.contains(QRegularExpression(iioDevice.channelTypeName + ".*raw$"))) {
                         qDebug() << "adding to paths:" << iioDevice.devicePath
                                    << attributeName << iioDevice.index;
                         addPath(iioDevice.devicePath + attributeName, j);
                         j++;
                     }
                 }
+                iioDevice.channels = j;
 
     // in_rot_from_north_magnetic_tilt_comp_raw ?
 
@@ -271,7 +276,7 @@ bool IioAdaptor::deviceEnable(int device, int enable)
 
     if (enable == 1) {
         // FIXME: should enable sensors for this device? Assuming enabled already
-        iioDevice.channels = scanElementsEnable(device, enable);
+        scanElementsEnable(device, enable);
         sysfsWriteInt(pathLength, IIO_BUFFER_LEN);
         sysfsWriteInt(pathEnable, enable);
     } else {
@@ -347,7 +352,7 @@ int IioAdaptor::scanElementsEnable(int device, int enable)
 
     // Find all the *_en file and write 0/1 to it
     QStringList filters;
-    filters << "*_en";
+    filters << ("*" + iioDevice.channelTypeName + "*_en");
     dir.setNameFilters(filters);
 
     QFileInfoList list = dir.entryInfoList();

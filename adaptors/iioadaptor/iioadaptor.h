@@ -68,6 +68,7 @@ class IioAdaptor : public SysfsAdaptor
       QString devicePath;
       int index;
       IioSensorType sensorType;
+      QString channelTypeName;
     };
 
 public:
