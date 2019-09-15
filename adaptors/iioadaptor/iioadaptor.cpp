@@ -146,8 +146,11 @@ void IioAdaptor::setup()
 //        setValid(false);
         return;
     }
-    scanElementsEnable(devNodeNumber,1);
-    scanElementsEnable(devNodeNumber,0);
+
+    if (mode() != SysfsAdaptor::IntervalMode) {
+        scanElementsEnable(devNodeNumber,1);
+        scanElementsEnable(devNodeNumber,0);
+    }
 
     /* Override the scaling factor if asked */
     bool ok;
@@ -521,7 +524,8 @@ bool IioAdaptor::startSensor()
         return false;
 
     qDebug() << Q_FUNC_INFO;
-    deviceEnable(devNodeNumber, true);
+    if (mode() != SysfsAdaptor::IntervalMode)
+        deviceEnable(devNodeNumber, true);
     return SysfsAdaptor::startSensor();
 }
 
@@ -530,6 +534,7 @@ void IioAdaptor::stopSensor()
     if (devNodeNumber == -1)
         return;
     qDebug() << Q_FUNC_INFO;
-    deviceEnable(devNodeNumber, false);
+    if (mode() != SysfsAdaptor::IntervalMode)
+        deviceEnable(devNodeNumber, false);
     SysfsAdaptor::stopSensor();
 }
