@@ -81,13 +81,13 @@ contains(CONFIG,hybris) {
 
     equals(QT_MAJOR_VERSION, 4):{
         PKGCONFIGFILES.files = sensord.pc
-        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" sensord.pc'
+        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" $$_PRO_FILE_PWD_/sensord.pc'
         QTCONFIGFILES.path = /usr/share/qt4/mkspecs/features
     }
 
     equals(QT_MAJOR_VERSION, 5):{
         PKGCONFIGFILES.files = sensord-qt5.pc
-        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" sensord-qt5.pc'
+        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" $$_PRO_FILE_PWD_/sensord-qt5.pc'
         QTCONFIGFILES.path = /usr/share/qt5/mkspecs/features
 
     }
