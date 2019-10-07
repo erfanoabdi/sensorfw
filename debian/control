@@ -3,7 +3,7 @@ Section: misc
 Priority: optional
 Maintainer: Lorn Potter <lorn.potter@gmail.com>
 Uploaders: 
-Build-Depends: debhelper (>=5), qt5-default, libudev-dev
+Build-Depends: debhelper (>=5), qt5-default, libudev-dev, libsystemd-dev, doxygen, graphviz
 Standards-Version: 3.7.3
 
 Package: sensorfw-qt5
