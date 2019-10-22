@@ -354,8 +354,6 @@ void HybrisManager::initManager()
                 m_sensorState[i].m_maxDelay = maxDelay;
 
                 setDelay(m_sensorArray[i].handle, delay, true);
-                setActive(m_sensorArray[i].handle, true);
-                setDelay(m_sensorArray[i].handle, delay, false);
 
                 sensordLogD("delay = %d [%d, %d]",
                             m_sensorState[i].m_delay,
