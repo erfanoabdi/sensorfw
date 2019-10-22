@@ -4,7 +4,7 @@ libdir=${prefix}/lib/
 
 Name: Sensorfw
 Description: Sensorfw
-Version: 0.11.1
+Version: 0.11.3
 Requires:
 Libs: -L${libdir} -lsensorclient -lsensordatatypes
 Cflags: -I${includedir} -I${includedir}/datatypes -I${includedir}/filters
