@@ -36,6 +36,7 @@ void IioAdaptorPlugin::Register(class Loader&)
     sm.registerDeviceAdaptor<IioAdaptor>("gyroscopeadaptor");
     sm.registerDeviceAdaptor<IioAdaptor>("magnetometeradaptor");
     sm.registerDeviceAdaptor<IioAdaptor>("alsadaptor");
+    sm.registerDeviceAdaptor<IioAdaptor>("proximityadaptor");
 }
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)

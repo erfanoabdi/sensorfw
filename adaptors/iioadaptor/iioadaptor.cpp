@@ -53,6 +53,10 @@
 #define GRAVITY         9.80665
 #define REV_GRAVITY     0.101936799
 
+// Proximity sensor
+#define PROXIMITY_DEFAULT_THRESHOLD 250
+#define PROXIMITY_NEAR_VALUE 0
+
 /* Conversion of acceleration data to SI units (m/s^2) */
 #define CONVERT_A_X(x)  ((float(x) / 1000) * (GRAVITY * -1.0))
 #define CONVERT_A_Y(x)  ((float(x) / 1000) * (GRAVITY * 1.0))
@@ -74,6 +78,8 @@ IioAdaptor::~IioAdaptor()
         delete alsBuffer_;
     if (magnetometerBuffer_)
         delete magnetometerBuffer_;
+    if (proximityBuffer_)
+        delete proximityBuffer_;
 }
 
 void IioAdaptor::setup()
@@ -95,8 +101,7 @@ void IioAdaptor::setup()
 
             iioDevice.sensorType = IioAdaptor::IIO_ACCELEROMETER;
         }
-    }
-    else if (deviceId.startsWith("gyro")) {
+    } else if (deviceId.startsWith("gyro")) {
         const QString name = "gyroscope";
         const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
@@ -110,8 +115,7 @@ void IioAdaptor::setup()
 
             iioDevice.sensorType = IioAdaptor::IIO_GYROSCOPE;
         }
-    }
-    else if (deviceId.startsWith("mag")) {
+    } else if (deviceId.startsWith("mag")) {
         const QString name = "magnetometer";
         const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
         qDebug() << "input_match" << inputMatch;
@@ -125,8 +129,7 @@ void IioAdaptor::setup()
 
             iioDevice.sensorType = IioAdaptor::IIO_MAGNETOMETER;
         }
-    }
-    else if (deviceId.startsWith("als")) {
+    } else if (deviceId.startsWith("als")) {
         const QString name = "als";
         const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
 
@@ -138,6 +141,21 @@ void IioAdaptor::setup()
             alsBuffer_ = new DeviceAdaptorRingBuffer<TimedUnsigned>(1);
             setAdaptedSensor(name, desc, alsBuffer_);
             iioDevice.sensorType = IioAdaptor::IIO_ALS;
+        }
+    } else if (deviceId.startsWith("prox")) {
+        const QString name = "proximity";
+        const QString inputMatch = SensorFrameworkConfig::configuration()->value<QString>(name + "/input_match");
+        qDebug() << name + ":" << "input_match" << inputMatch;
+
+        iioDevice.channelTypeName = "proximity";
+        devNodeNumber = findSensor(inputMatch);
+        proximityThreshold = SensorFrameworkConfig::configuration()->value<QString>(name + "/threshold", QString(PROXIMITY_DEFAULT_THRESHOLD)).toInt();
+        if (devNodeNumber!= -1) {
+            QString desc = "Industrial I/O proximity sensor (" + iioDevice.name +")";
+            qDebug() << desc;
+            proximityBuffer_ = new DeviceAdaptorRingBuffer<ProximityData>(1);
+            setAdaptedSensor(name, desc, proximityBuffer_);
+            iioDevice.sensorType = IioAdaptor::IIO_PROXIMITY;
         }
     }
 
@@ -197,7 +215,11 @@ int IioAdaptor::findSensor(const QString &sensorName)
                 QString eventName = QString::fromLatin1(udev_device_get_sysname(dev));
                 iioDevice.devicePath = QString::fromLatin1(udev_device_get_syspath(dev)) +"/";
                 iioDevice.index = eventName.right(1).toInt(&ok2);
-                qDebug() << Q_FUNC_INFO << "syspath" << iioDevice.devicePath;
+                // Default values
+                iioDevice.offset = 0.0;
+                iioDevice.scale = 1.0;
+                iioDevice.frequency = 1.0;
+                qDebug() << Q_FUNC_INFO << "Syspath for sensor (" + sensorName + "):" << iioDevice.devicePath;
 
                 udev_list_entry_foreach(sysattr, udev_device_get_sysattr_list_entry(dev)) {
                     const char *name;
@@ -213,18 +235,18 @@ int IioAdaptor::findSensor(const QString &sensorName)
                     if (attributeName.contains(QRegularExpression(iioDevice.channelTypeName + ".*scale$"))) {
                         iioDevice.scale = QString(value).toDouble(&ok);
                         if (ok) {
-                         //   scale = num;
-                            qDebug() << "scale is" << iioDevice.scale;
+                            qDebug() << sensorName + ":" << "Scale is" << iioDevice.scale;
                         }
                     } else if (attributeName.contains(QRegularExpression(iioDevice.channelTypeName + ".*offset$"))) {
                         iioDevice.offset = QString(value).toDouble(&ok);
-                        if (ok)
-                        qDebug() << "offset is" << value;
+                        if (ok) {
+                            qDebug() << sensorName + ":" << "Offset is" << value;
+                        }
                     } else if (attributeName.endsWith("frequency")) {
                         iioDevice.frequency = QString(value).toDouble(&ok);
-                        if (ok)
-                       //     frequency = num;
-                        qDebug() << "frequency is" << iioDevice.frequency;
+                        if (ok) {
+                            qDebug() << sensorName + ":" << "Frequency is" << iioDevice.frequency;
+                        }
                     } else if (attributeName.contains(QRegularExpression(iioDevice.channelTypeName + ".*raw$"))) {
                         qDebug() << "adding to paths:" << iioDevice.devicePath
                                    << attributeName << iioDevice.index;
@@ -432,6 +454,18 @@ void IioAdaptor::processSample(int fileId, int fd)
                 uData = alsBuffer_->nextSlot();
                 uData->value_ = (result + iioDevice.offset) * iioDevice.scale;
                 break;
+            case IioAdaptor::IIO_PROXIMITY:
+                {
+                    bool near = false;
+                    int proximityValue = (result + iioDevice.offset) * iioDevice.scale;
+                    proximityData = proximityBuffer_->nextSlot();
+                    if (proximityValue >= proximityThreshold) {
+                        near = true;
+                    }
+                    proximityData->withinProximity_ = near;
+                    proximityData->value_ = near ? PROXIMITY_NEAR_VALUE : proximityValue;
+                }
+                break;
             default:
                 break;
             };
@@ -492,6 +526,13 @@ void IioAdaptor::processSample(int fileId, int fd)
                 uData->timestamp_ = Utils::getTimeStamp();
                 alsBuffer_->commit();
                 alsBuffer_->wakeUpReaders();
+                sensordLogT() << "ALS offset=" << iioDevice.offset << "scale=" << iioDevice.scale << "value=" << uData->value_ << "timestamp=" << uData->timestamp_;
+                break;
+            case IioAdaptor::IIO_PROXIMITY:
+                proximityData->timestamp_ = Utils::getTimeStamp();
+                proximityBuffer_->commit();
+                proximityBuffer_->wakeUpReaders();
+                sensordLogT() << "Proximity offset=" << iioDevice.offset << "scale=" << iioDevice.scale << "value=" << proximityData->value_ << "within proximity=" << proximityData->withinProximity_ << "timestamp=" << proximityData->timestamp_;
                 break;
             default:
                 break;

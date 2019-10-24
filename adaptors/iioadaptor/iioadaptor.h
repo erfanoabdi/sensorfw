@@ -55,7 +55,8 @@ class IioAdaptor : public SysfsAdaptor
         IIO_MAGNETOMETER, // magn_3d
         IIO_ROTATION, // dev_rotation, quaternion
         IIO_ALS, // als
-        IIO_TILT // incli_3d
+        IIO_TILT, // incli_3d
+        IIO_PROXIMITY // proximity als
     };
 
     struct iio_device {
@@ -130,9 +131,12 @@ private:
     // Device number for the sensor (-1 if not found)
     int devNodeNumber;
 
+    int proximityThreshold;
+
     DeviceAdaptorRingBuffer<TimedXyzData>* iioXyzBuffer_;
     DeviceAdaptorRingBuffer<TimedUnsigned>* alsBuffer_;
     DeviceAdaptorRingBuffer<CalibratedMagneticFieldData>* magnetometerBuffer_;
+    DeviceAdaptorRingBuffer<ProximityData>* proximityBuffer_;
 
     iio_device iioDevice;
 
@@ -141,6 +145,7 @@ private:
     TimedXyzData* timedData;
     CalibratedMagneticFieldData *calData;
     TimedUnsigned *uData;
+    ProximityData *proximityData;
 
 private slots:
     void setup();
