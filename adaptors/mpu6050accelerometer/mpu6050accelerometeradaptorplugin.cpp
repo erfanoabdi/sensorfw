@@ -29,7 +29,3 @@ void Mpu6050AccelerometerAdaptorPlugin::Register(class Loader&)
     SensorManager& sm = SensorManager::instance();
     sm.registerDeviceAdaptor<Mpu6050AccelAdaptor>("accelerometeradaptor");
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(mpu6050accelerometeradaptor, Mpu6050AccelerometerAdaptorPlugin)
-#endif

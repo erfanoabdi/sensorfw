@@ -466,11 +466,7 @@ protected:
      * Wrapper for function of QDBusAbstractInterface.
      * For more details see QDBusAbstractInterface docs.
      */
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    void dbusConnectNotify(const char* signal);
-#else
     void dbusConnectNotify(const QMetaMethod& signal);
-#endif
 protected slots:
     void startFinished(QDBusPendingCallWatcher *watch);
     void stopFinished(QDBusPendingCallWatcher *watch);

@@ -23,12 +23,7 @@ INCLUDEPATH += $$SENSORFW_INCLUDEPATHS
 QMAKE_LIBDIR_FLAGS += -L../datatypes \
                       -L../core
 
-equals(QT_MAJOR_VERSION, 4):{
-    TARGET_H.path += /usr/include/sensord
-}
-equals(QT_MAJOR_VERSION, 5):{
-    TARGET_H.path += /usr/include/sensord-qt5
-}
+TARGET_H.path += /usr/include/sensord-qt5
 
 SOURCES += main.cpp \
            parser.cpp \

@@ -44,7 +44,3 @@ void TemperaturePlugin::Init(class Loader& l)
 QStringList TemperaturePlugin::Dependencies() {
     return QString("temperatureadaptor").split(":", QString::SkipEmptyParts);
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(temperaturesensor, TemperaturePlugin)
-#endif

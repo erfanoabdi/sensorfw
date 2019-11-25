@@ -8,5 +8,3 @@ void OEMTabletGyroscopeAdaptorPlugin::Register(class Loader&)
     SensorManager& sm = SensorManager::instance();
     sm.registerDeviceAdaptor<OEMTabletGyroscopeAdaptor>("gyroscopeadaptor");
 }
-
-Q_EXPORT_PLUGIN2(gyroscopeadaptor, OEMTabletGyroscopeAdaptorPlugin)

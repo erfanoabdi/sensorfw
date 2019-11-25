@@ -37,7 +37,3 @@ void MagnetometerAdaptorEvdevPlugin::Register(class Loader&)
     SensorManager& sm = SensorManager::instance();
     sm.registerDeviceAdaptor<MagAdaptorEvdev>("magnetometeradaptor");
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(magnetometeradaptor-evdev, MagnetometerAdaptorEvdevPlugin)
-#endif

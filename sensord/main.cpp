@@ -169,7 +169,6 @@ void SignalNotifier::handleSignalInput(int socket)
 {
     Q_UNUSED(socket);
     int sig = SIGTERM;
-    uint64_t tmp = 0;
     if (read(s_pipe[0], &sig, sizeof sig) == -1) {
         // dontcare
     }

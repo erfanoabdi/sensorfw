@@ -9,7 +9,3 @@ void OemtabletAccelerometerAdaptorPlugin::Register(class Loader&)
     SensorManager& sm = SensorManager::instance();
     sm.registerDeviceAdaptor<OemtabletAccelAdaptor>("accelerometeradaptor");
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(oemtabletaccelerometeradaptor, OemtabletAccelerometerAdaptorPlugin)
-#endif
