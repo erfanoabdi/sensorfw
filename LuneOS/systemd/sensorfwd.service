@@ -1,7 +1,7 @@
 [Unit]
 Description=Sensor daemon for sensor framework
-After=dbus.socket ls-hubd_private.service
-Requires=dbus.service ls-hubd_private.service
+After=dbus.socket ls-hubd.service
+Requires=dbus.service ls-hubd.service
 Conflicts=actdead.target
 
 [Service]

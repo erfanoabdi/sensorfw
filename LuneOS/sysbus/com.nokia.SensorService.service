@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=com.nokia.SensorService
+Exec=/usr/sbin/sensorfwd -c=/etc/sensorfw/primaryuse.conf
+Type=static
