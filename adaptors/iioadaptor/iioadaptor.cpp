@@ -56,6 +56,7 @@
 // Proximity sensor
 #define PROXIMITY_DEFAULT_THRESHOLD 250
 #define PROXIMITY_NEAR_VALUE 0
+#define PROXIMITY_FAR_VALUE 100
 
 /* Conversion of acceleration data to SI units (m/s^2) */
 #define CONVERT_A_X(x)  ((float(x) / 1000) * (GRAVITY * -1.0))
@@ -459,11 +460,12 @@ void IioAdaptor::processSample(int fileId, int fd)
                     bool near = false;
                     int proximityValue = (result + iioDevice.offset) * iioDevice.scale;
                     proximityData = proximityBuffer_->nextSlot();
+                    // IIO proximity sensors are inverted in comparison to Hybris proximity sensors
                     if (proximityValue >= proximityThreshold) {
                         near = true;
                     }
                     proximityData->withinProximity_ = near;
-                    proximityData->value_ = near ? PROXIMITY_NEAR_VALUE : proximityValue;
+                    proximityData->value_ = near ? PROXIMITY_NEAR_VALUE : PROXIMITY_FAR_VALUE;
                 }
                 break;
             default:
