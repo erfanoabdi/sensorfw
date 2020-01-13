@@ -1,4 +1,0 @@
-[D-BUS Service]
-Name=com.nokia.SensorService
-Exec=/usr/sbin/sensrofwd
-Type=static
