@@ -434,10 +434,15 @@ void IioAdaptor::processSample(int fileId, int fd)
             sensordLogW() << "read():" << strerror(errno);
             return;
         }
-        result = strtol(buf, NULL, 10);
 
-        if (result == 0)
+        errno = 0; // reset errno before call
+        result = strtol(buf, NULL, 10);
+        
+        // If any conversion error occurs, abort
+        if (errno != 0) {
+            sensordLogW() << "strtol(): Unable to convert string to long"; 
             return;
+        }
 
         switch(channel) {
         case 0: {
