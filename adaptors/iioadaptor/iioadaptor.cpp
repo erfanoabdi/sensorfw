@@ -56,6 +56,7 @@
 // Proximity sensor
 #define PROXIMITY_DEFAULT_THRESHOLD 250
 #define PROXIMITY_NEAR_VALUE 0
+#define PROXIMITY_FAR_VALUE 100
 
 /* Conversion of acceleration data to SI units (m/s^2) */
 #define CONVERT_A_X(x)  ((float(x) / 1000) * (GRAVITY * -1.0))
@@ -433,10 +434,15 @@ void IioAdaptor::processSample(int fileId, int fd)
             sensordLogW() << "read():" << strerror(errno);
             return;
         }
-        result = strtol(buf, NULL, 10);
 
-        if (result == 0)
+        errno = 0; // reset errno before call
+        result = strtol(buf, NULL, 10);
+        
+        // If any conversion error occurs, abort
+        if (errno != 0) {
+            sensordLogW() << "strtol(): Unable to convert string to long"; 
             return;
+        }
 
         switch(channel) {
         case 0: {
@@ -459,11 +465,12 @@ void IioAdaptor::processSample(int fileId, int fd)
                     bool near = false;
                     int proximityValue = (result + iioDevice.offset) * iioDevice.scale;
                     proximityData = proximityBuffer_->nextSlot();
+                    // IIO proximity sensors are inverted in comparison to Hybris proximity sensors
                     if (proximityValue >= proximityThreshold) {
                         near = true;
                     }
                     proximityData->withinProximity_ = near;
-                    proximityData->value_ = near ? PROXIMITY_NEAR_VALUE : proximityValue;
+                    proximityData->value_ = near ? PROXIMITY_NEAR_VALUE : PROXIMITY_FAR_VALUE;
                 }
                 break;
             default:
