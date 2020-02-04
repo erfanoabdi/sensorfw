@@ -8,5 +8,3 @@ void OemtabletMagnetometerAdaptorPlugin::Register(class Loader&)
     SensorManager& sm = SensorManager::instance();
     sm.registerDeviceAdaptor<OemtabletMagnetometerAdaptor>("magnetometeradaptor");
 }
-
-Q_EXPORT_PLUGIN2(magnetometeradaptor, OemtabletMagnetometerAdaptorPlugin)

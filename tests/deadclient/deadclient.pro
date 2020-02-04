@@ -15,12 +15,8 @@ INCLUDEPATH += ../../ \
 
 QMAKE_LIBDIR_FLAGS += -L../../qt-api  \
                       -L../../datatypes
-equals(QT_MAJOR_VERSION, 4):{
-    QMAKE_LIBDIR_FLAGS += -lsensordatatypes -lsensorclient
-}
-equals(QT_MAJOR_VERSION, 5):{
-    QMAKE_LIBDIR_FLAGS += -lsensordatatypes-qt5 -lsensorclient-qt5
-}
+
+QMAKE_LIBDIR_FLAGS += -lsensordatatypes-qt5 -lsensorclient-qt5
 
 # Input
 HEADERS += datareceiver.h testwindow.h

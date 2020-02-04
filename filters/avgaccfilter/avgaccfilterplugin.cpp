@@ -30,7 +30,3 @@ void AvgAccFilterPlugin::Register(class Loader&)
     SensorManager& sm = SensorManager::instance();
     sm.registerFilter<AvgAccFilter>("avgaccfilter");
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(avgaccfilter, AvgAccFilterPlugin)
-#endif

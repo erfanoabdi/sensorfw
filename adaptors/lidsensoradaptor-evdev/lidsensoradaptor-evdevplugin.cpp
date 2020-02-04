@@ -34,7 +34,3 @@ void LidsensorAdaptorEvdevPlugin::Register(class Loader&)
     SensorManager& sm = SensorManager::instance();
     sm.registerDeviceAdaptor<LidSensorAdaptorEvdev>("lidsensoradaptor");
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(lidsensoradaptor-evdev, LidsensorAdaptorEvdevPlugin)
-#endif

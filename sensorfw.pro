@@ -26,10 +26,6 @@ SUBDIRS = datatypes \
           tests \
           examples
 
-equals(QT_MAJOR_VERSION, 4): {
-    SUBDIRS = datatypes qt-api
-}
-
 contains(CONFIG,configs) {
    # !contains(CONFIG,hybris) {
         SENSORDHYBRISCONFIGFILE.files = config/sensord-hybris.conf
@@ -79,54 +75,36 @@ contains(CONFIG,hybris) {
     include( common-install.pri )
     include( common-config.pri )
 
-    equals(QT_MAJOR_VERSION, 4):{
-        PKGCONFIGFILES.files = sensord.pc
-        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" $$_PRO_FILE_PWD_/sensord.pc'
-        QTCONFIGFILES.path = /usr/share/qt4/mkspecs/features
-    }
-
-    equals(QT_MAJOR_VERSION, 5):{
-        PKGCONFIGFILES.files = sensord-qt5.pc
-        PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" $$_PRO_FILE_PWD_/sensord-qt5.pc'
-        QTCONFIGFILES.path = /usr/share/qt5/mkspecs/features
-
-    }
+    PKGCONFIGFILES.files = sensord-qt5.pc
+    PKGCONFIGFILES.commands = 'sed -i "s/Version:.*/Version: $$PC_VERSION/" $$_PRO_FILE_PWD_/sensord-qt5.pc'
+    QTCONFIGFILES.path = /usr/share/qt5/mkspecs/features
 }
 
 
 
 # How to make this work in all cases?
-#PKGCONFIGFILES.commands = sed -i \"s/Version:.*$$/Version: `head -n1 debian/changelog | cut -f 2 -d\' \' | tr -d \'()\'`/\" sensord.pc
+#PKGCONFIGFILES.commands = sed -i \"s/Version:.*$$/Version: `head -n1 debian/changelog | cut -f 2 -d\' \' | tr -d \'()\'`/\" sensord-qt5.pc
 
 
-equals(QT_MAJOR_VERSION, 5):  {
-    !contains(CONFIG,hybris) {
+!contains(CONFIG,hybris) {
 # config file installation not handled here
-        DBUSCONFIGFILES.files = sensorfw.conf
-        DBUSCONFIGFILES.path = /etc/dbus-1/system.d
-        INSTALLS += DBUSCONFIGFILES
+    DBUSCONFIGFILES.files = sensorfw.conf
+    DBUSCONFIGFILES.path = /etc/dbus-1/system.d
+    INSTALLS += DBUSCONFIGFILES
 
-        SENSORDCONFIGFILES.files  = config/10-sensord-default.conf
-        SENSORDCONFIGFILES.files += config/20-sensors-default.conf
-        SENSORDCONFIGFILES.path = /etc/sensorfw/sensord.conf.d
-        INSTALLS += SENSORDCONFIGFILES
+    SENSORDCONFIGFILES.files  = config/10-sensord-default.conf
+    SENSORDCONFIGFILES.files += config/20-sensors-default.conf
+    SENSORDCONFIGFILES.path = /etc/sensorfw/sensord.conf.d
+    INSTALLS += SENSORDCONFIGFILES
 
-        SENSORSYSTEMD.files = rpm/sensorfwd.service
-        SENSORSYSTEMD.path = /lib/systemd/system
-        INSTALLS += SENSORSYSTEMD
-    }
+    SENSORSYSTEMD.files = rpm/sensorfwd.service
+    SENSORSYSTEMD.path = /lib/systemd/system
+    INSTALLS += SENSORSYSTEMD
 }
 
-equals(QT_MAJOR_VERSION, 4):  {
-    OTHER_FILES += rpm/sensorfw.spec \
-                   rpm/sensorfw.yaml
-}
+OTHER_FILES += rpm/sensorfw-qt5.spec \
+               rpm/sensorfw-qt5-binder.spec \
+               rpm/sensorfw-qt5-hybris.inc \
+               rpm/sensorfw-qt5-hybris.spec
 
-equals(QT_MAJOR_VERSION, 5):  {
-    OTHER_FILES += rpm/sensorfw-qt5.spec \
-                   rpm/sensorfw-qt5.yaml
-    OTHER_FILES += rpm/sensorfw-qt5-hybris.spec \
-                   rpm/sensorfw-qt5-hybris.yaml
-
-}
 OTHER_FILES += config/*

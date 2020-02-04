@@ -29,9 +29,7 @@ profile-libc {
   QMAKE_LFLAGS += -lc_p
 }
 
-equals(QT_MAJOR_VERSION, 5):{
-    TARGET = $$TARGET-qt5
-}
+TARGET = $$TARGET-qt5
 
 OTHER_FILES += \
     ../../common.pri

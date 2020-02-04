@@ -99,12 +99,8 @@ public:
 
 protected:
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    virtual void connectNotify(const char* signal);
-#else
     virtual void connectNotify(const QMetaMethod & signal);
-#endif
-virtual bool dataReceivedImpl();
+    virtual bool dataReceivedImpl();
 
 private:
     bool frameAvailableConnected; /**< has applicaiton connected slot for frameAvailable signal. */

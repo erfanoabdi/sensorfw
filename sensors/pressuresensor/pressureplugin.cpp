@@ -44,7 +44,3 @@ void PressurePlugin::Init(class Loader& l)
 QStringList PressurePlugin::Dependencies() {
     return QString("pressureadaptor").split(":", QString::SkipEmptyParts);
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(pressuresensor, PressurePlugin)
-#endif

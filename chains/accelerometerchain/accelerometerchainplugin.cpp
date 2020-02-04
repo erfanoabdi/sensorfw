@@ -39,7 +39,3 @@ void AccelerometerChainPlugin::Register(class Loader&)
 QStringList AccelerometerChainPlugin::Dependencies() {
     return QString("coordinatealignfilter:accelerometeradaptor").split(":", QString::SkipEmptyParts);
 }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(accelerometerchain, AccelerometerChainPlugin)
-#endif
