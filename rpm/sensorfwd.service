@@ -12,8 +12,7 @@ ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=1
 # Sandboxing
-CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_FOWNER
-PrivateNetwork=true
+CapabilityBoundingSet=CAP_BLOCK_SUSPEND CAP_DAC_OVERRIDE CAP_FOWNER
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=full
