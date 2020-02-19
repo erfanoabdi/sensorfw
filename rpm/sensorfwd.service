@@ -13,7 +13,6 @@ Restart=always
 RestartSec=1
 # Sandboxing
 CapabilityBoundingSet=CAP_BLOCK_SUSPEND CAP_DAC_OVERRIDE CAP_FOWNER
-PrivateNetwork=true
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=full
