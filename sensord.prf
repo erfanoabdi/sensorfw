@@ -1,5 +1,5 @@
 
-LIBS += -L/usr/lib/ -lsensorclient-qt5 -lsensordatatypes-qt5
+LIBS += -L$$[QT_INSTALL_LIBS] -lsensorclient-qt5 -lsensordatatypes-qt5
 DEPENDPATH += /usr/include/sensord-qt5
 INCLUDEPATH += /usr/include/sensord-qt5 /usr/include/sensord-qt5/datatypes /usr/include/sensord-qt5/filters
 

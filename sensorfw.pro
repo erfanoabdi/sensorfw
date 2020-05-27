@@ -65,7 +65,7 @@ contains(CONFIG,hybris) {
     publicheaders.files += include/*.h
 
     INSTALLS += PKGCONFIGFILES QTCONFIGFILES
-    PKGCONFIGFILES.path = /usr/lib/pkgconfig
+    PKGCONFIGFILES.path = $$[QT_INSTALL_LIBS]/pkgconfig
     QTCONFIGFILES.files = sensord.prf
 
     qt-api.depends = datatypes

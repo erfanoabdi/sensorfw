@@ -37,7 +37,7 @@ Development headers for sensor framework daemon and libraries.
 
 %build
 unset LD_AS_NEEDED
-export LD_RUN_PATH=/usr/lib/sensord-qt5/
+export LD_RUN_PATH=%{_libdir}/sensord-qt5/
 export QT_SELECT=5
 
 %qmake5 CONFIG+=hybris %{qmake_extra_parameters} PC_VERSION=`echo %{version} | sed 's/+.*//'`

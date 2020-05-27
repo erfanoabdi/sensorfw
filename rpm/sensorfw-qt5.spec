@@ -93,8 +93,11 @@ API documentation for libsensord
 %setup -q -n %{name}-%{version}
 
 %build
+# setup proper lib
+sed "s=@LIB@=%{_lib}=g" sensord-qt5.pc.in > sensord-qt5.pc
+sed "s=@LIBDIR@=%{_libdir}=g" tests/tests.xml.in > tests/tests.xml
 unset LD_AS_NEEDED
-export LD_RUN_PATH=/usr/lib/sensord-qt5/
+export LD_RUN_PATH=%{_libdir}/sensord-qt5/
 export QT_SELECT=5
 
 %qmake5  \
