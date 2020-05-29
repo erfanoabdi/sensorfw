@@ -17,7 +17,7 @@ QMAKE_LIBDIR_FLAGS += -lsensordatatypes-qt5
 
 SOURCES += hybrisadaptor.cpp
 HEADERS += hybrisadaptor.h
-LIBS += -L/usr/lib -L../datatypes
+LIBS += -L$$[QT_INSTALL_LIBS] -L../datatypes
 
 !contains(CONFIG,binder) {
     LIBS += -lhybris-common -lhardware

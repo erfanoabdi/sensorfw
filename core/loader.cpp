@@ -54,7 +54,6 @@ Loader& Loader::instance()
 }
 
 #define PLUGIN_PREFIX_ENV "SENSORFW_LIBRARY_PATH"
-#define PLUGIN_DIRECTORY  "/usr/lib/sensord-qt5"
 #define PLUGIN_PREFIX     "lib"
 #define PLUGIN_SUFFIX     "-qt5.so"
 #define SENSOR_SUFFIX     "sensor"

@@ -15,6 +15,8 @@ SENSORFW_INCLUDEPATHS = .. \
 DEPENDPATH += $$SENSORFW_INCLUDEPATHS
 INCLUDEPATH += $$SENSORFW_INCLUDEPATHS
 
+DEFINES += PLUGIN_DIRECTORY=\"\\\"$$[QT_INSTALL_LIBS]/sensord-qt5\\\"\"
+
 QMAKE_LIBDIR_FLAGS += -L../datatypes\
                       -lsensordatatypes-qt5
 
