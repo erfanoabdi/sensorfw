@@ -276,6 +276,15 @@ bool SocketHandler::removeSession(int sessionId)
     return true;
 }
 
+void SocketHandler::checkConnectionEstablished(int sessionId)
+{
+    if (!(m_idMap.keys().contains(sessionId))) {
+        sensordLogW() << "[SocketHandler]: Socket connection for session" << sessionId
+                      << "hasn't been estabilished. Considering session lost";
+        emit lostSession(sessionId);
+    }
+}
+
 void SocketHandler::newConnection()
 {
     sensordLogT() << "[SocketHandler]: New connection received.";

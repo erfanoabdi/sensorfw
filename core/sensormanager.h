@@ -30,6 +30,9 @@
 #ifndef SENSORMANAGER_H
 #define SENSORMANAGER_H
 
+#include <QDBusContext>
+#include <QDBusServiceWatcher>
+
 #include "abstractsensor.h"
 #include "abstractchain.h"
 #include "deviceadaptor.h"
@@ -50,6 +53,7 @@ class MceWatcher;
 #endif
 
 class QSocketNotifier;
+class QTimer;
 class SocketHandler;
 
 /**
@@ -124,10 +128,56 @@ public:
 };
 
 /**
+ * Sensor session instance entry. Contains session ID, D-Bus service name of
+ * connecting side and timer for initial connection timeout.
+ */
+class SessionInstanceEntry : public QObject
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(SessionInstanceEntry)
+public:
+    /**
+     * Constructor.
+     *
+     * @param sessionId Sensor ID
+     * @param clientName D-Bus service name of requesting side
+     */
+    SessionInstanceEntry(QObject* parent, int sessionId, const QString& clientName);
+
+    /**
+     * Destructor.
+     */
+    ~SessionInstanceEntry();
+
+    /**
+     * Start timer to check if socket connection has been established after timeout.
+     *
+     * @param msec time to wait for socket connection.
+     */
+    void expectConnection(int msec);
+
+    int                     m_sessionId;   /**< Session ID */
+    QString                 m_clientName;  /**< D-Bus private client name */
+    QTimer*                 m_timer;       /**< timer for initial connection */
+
+public slots:
+
+    /**
+     * Callback for initial connection timer.
+     */
+    void timerTimeout();
+
+    /**
+     * Callback for session socket connection getting established.
+     */
+    void sessionConnected(int sessionId);
+};
+
+/**
  * Sensor manager. Singleton class which manages client sessions and
  * track existence and usage of sensors, chains and adaptors.
  */
-class SensorManager : public QObject
+class SensorManager : public QObject, protected QDBusContext
 {
     Q_OBJECT
     Q_DISABLE_COPY(SensorManager)
@@ -368,6 +418,13 @@ private Q_SLOTS:
     void lostClient(int sessionId);
 
     /**
+     * Callback for D-Bus service unregistration.
+     *
+     * @param sessionId Session ID.
+     */
+    void dbusClientUnregistered(const QString &clientName);
+
+    /**
      * Callback for MCE or LS display state change event.
      *
      * @param displayState display state.
@@ -473,6 +530,7 @@ private:
 
     QMap<QString, SensorChannelFactoryMethod>      sensorFactoryMap_; /**< factories for sensor types */
     QMap<QString, SensorInstanceEntry>             sensorInstanceMap_; /**< sensor instances */
+    QMap<int,     SessionInstanceEntry*>           sessionInstanceMap_; /**< sensor session instances */
 
     QMap<QString, DeviceAdaptorFactoryMethod>      deviceAdaptorFactoryMap_; /**< factories for adaptor types. */
     QMap<QString, DeviceAdaptorInstanceEntry>      deviceAdaptorInstanceMap_; /**< adaptor instances */
@@ -483,6 +541,7 @@ private:
     QMap<QString, FilterFactoryMethod>             filterFactoryMap_; /**< factories for filter types */
 
     SocketHandler*                                 socketHandler_; /**< socket handler */
+    QDBusServiceWatcher*                           serviceWatcher_; /**< D-Bus service watcher */
     MceWatcher*                                    mceWatcher_; /**< MCE watcher */
 #ifdef SENSORFW_LUNA_SERVICE_CLIENT
     LSClient*                                      lsClient_; /**< LS client */
@@ -496,6 +555,8 @@ private:
     static int                                     sessionIdCount_; /** session ID counter */
 
     double deviation;
+
+    static const int SOCKET_CONNECTION_TIMEOUT_MS;
 };
 
 template<class SENSOR_TYPE>
