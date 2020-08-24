@@ -41,11 +41,13 @@
 #endif // SENSORFW_LUNA_SERVICE_CLIENT
 #include <QSocketNotifier>
 #include <errno.h>
+#include <functional>
 #include "sockethandler.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <QTimer>
 #include <QSettings>
 
 
@@ -54,6 +56,8 @@ typedef struct {
         int size;
         void* buffer;
 } PipeData;
+
+const int SensorManager::SOCKET_CONNECTION_TIMEOUT_MS = 10000;
 
 SensorManager* SensorManager::instance_ = NULL;
 int SensorManager::sessionIdCount_ = 0;
@@ -89,6 +93,59 @@ DeviceAdaptorInstanceEntry::DeviceAdaptorInstanceEntry(const QString& type, cons
 
 DeviceAdaptorInstanceEntry::~DeviceAdaptorInstanceEntry()
 {
+}
+
+SessionInstanceEntry::SessionInstanceEntry(QObject* parent, int sessionId, const QString& clientName)
+    : QObject(parent)
+    , m_sessionId(sessionId)
+    , m_clientName(clientName)
+    , m_timer(nullptr)
+{
+}
+
+SessionInstanceEntry::~SessionInstanceEntry()
+{
+    if (m_timer) {
+        delete m_timer;
+        m_timer = nullptr;
+    }
+}
+
+void SessionInstanceEntry::expectConnection(int msec)
+{
+    m_timer = new QTimer(this);
+    m_timer->setSingleShot(true);
+    m_timer->setInterval(msec);
+    connect(m_timer, &QTimer::timeout, this, &SessionInstanceEntry::timerTimeout);
+    m_timer->start();
+
+    SocketHandler& socketHandler = SensorManager::instance().socketHandler();
+    connect(&socketHandler, &SocketHandler::connectedSession,
+            this, &SessionInstanceEntry::sessionConnected);
+}
+
+void SessionInstanceEntry::timerTimeout()
+{
+    m_timer->deleteLater();
+    m_timer = nullptr;
+
+    SocketHandler& socketHandler = SensorManager::instance().socketHandler();
+    disconnect(&socketHandler, &SocketHandler::connectedSession, this, nullptr);
+    socketHandler.checkConnectionEstablished(m_sessionId);
+}
+
+void SessionInstanceEntry::sessionConnected(int sessionId)
+{
+    if (sessionId == m_sessionId) {
+        if (m_timer) {
+            m_timer->stop();
+            m_timer->deleteLater();
+            m_timer = nullptr;
+        }
+
+        SocketHandler& socketHandler = SensorManager::instance().socketHandler();
+        disconnect(&socketHandler, &SocketHandler::connectedSession, this, nullptr);
+    }
 }
 
 inline QDBusConnection bus()
@@ -137,6 +194,11 @@ SensorManager::SensorManager()
     if (chmod(SOCKET_NAME, S_IRWXU|S_IRWXG|S_IRWXO) != 0) {
         sensordLogW() << "Error setting socket permissions! " << SOCKET_NAME;
     }
+
+    serviceWatcher_ = new QDBusServiceWatcher(this);
+    serviceWatcher_->setWatchMode(QDBusServiceWatcher::WatchForUnregistration);
+    QObject::connect(serviceWatcher_, &QDBusServiceWatcher::serviceUnregistered,
+                     this, &SensorManager::dbusClientUnregistered);
 
 #ifdef SENSORFW_MCE_WATCHER
     mceWatcher_ = new MceWatcher(this);
@@ -211,6 +273,7 @@ SensorManager::~SensorManager()
 
     delete socketHandler_;
     delete pipeNotifier_;
+    delete serviceWatcher_;
     if (pipefds_[0]) close(pipefds_[0]);
     if (pipefds_[1]) close(pipefds_[1]);
 
@@ -260,6 +323,7 @@ bool SensorManager::registerService()
         setError(SmCanNotRegisterService, error.message());
         return false;
     }
+    serviceWatcher_->setConnection(bus());
     return true;
 }
 
@@ -368,8 +432,12 @@ int SensorManager::requestSensor(const QString& id)
         return INVALID_SESSION;
     }
 
+    QString clientName = "";
+    if ( calledFromDBus() )
+        clientName = message().service();
+
     int sessionId = createNewSessionId();
-    if(!entryIt.value().sensor_)
+    if (!entryIt.value().sensor_)
     {
         AbstractSensorChannel* sensor = addSensor(id);
         if ( sensor == NULL )
@@ -380,12 +448,32 @@ int SensorManager::requestSensor(const QString& id)
         entryIt.value().sensor_ = sensor;
     }
     entryIt.value().sessions_.insert(sessionId);
+    if ( !clientName.isEmpty() )
+    {
+        QMap<int, SessionInstanceEntry*>::iterator sessionIt = sessionInstanceMap_.insert(
+            sessionId, new SessionInstanceEntry(this, sessionId, clientName));
+        serviceWatcher_->addWatchedService(clientName);
+        sessionIt.value()->expectConnection(SOCKET_CONNECTION_TIMEOUT_MS);
+    }
 
     return sessionId;
 }
 
 bool SensorManager::releaseSensor(const QString& id, int sessionId)
 {
+    QString clientName = "";
+    QMap<int, SessionInstanceEntry*>::iterator sessionIt = sessionInstanceMap_.find(sessionId);
+    if ( calledFromDBus() )
+    {
+        clientName = message().service();
+        if ( sessionIt == sessionInstanceMap_.end() || sessionIt.value()->m_clientName != clientName )
+        {
+            sensordLogW() << "Ignoring attempt to release session" << sessionId
+                          << "that wasn't previously registered for D-Bus client" << clientName;
+            return false;
+        }
+    }
+
     sensordLogD() << "Releasing sensor '" << id << "' for session: " << sessionId;
 
     clearError();
@@ -429,6 +517,28 @@ bool SensorManager::releaseSensor(const QString& id, int sessionId)
     {
         // sessionId does not correspond to a request
         setError( SmNotInstantiated, tr("invalid sessionId, no session to release") );
+    }
+
+    if ( sessionIt != sessionInstanceMap_.end() )
+    {
+        delete sessionIt.value();
+        sessionInstanceMap_.erase(sessionIt);
+    }
+
+    if (!clientName.isEmpty())
+    {
+        bool hasMoreSessions = false;
+        for (sessionIt = sessionInstanceMap_.begin(); sessionIt != sessionInstanceMap_.end(); ++sessionIt)
+        {
+            if (sessionIt.value()->m_clientName == clientName)
+            {
+                hasMoreSessions = true;
+                break;
+            }
+        }
+
+        if (!hasMoreSessions)
+            serviceWatcher_->removeWatchedService(clientName);
     }
 
     socketHandler_->removeSession(sessionId);
@@ -687,6 +797,19 @@ void SensorManager::lostClient(int sessionId)
         }
     }
     sensordLogW() << "[SensorManager]: Lost session " << sessionId << " detected, but not found from session list";
+}
+
+void SensorManager::dbusClientUnregistered(const QString &clientName)
+{
+    sensordLogD() << "Watched D-Bus service '" << clientName << "' unregistered";
+    QMap<int, SessionInstanceEntry*>::iterator it = sessionInstanceMap_.begin();
+    while (it != sessionInstanceMap_.end())
+    {
+        QMap<int, SessionInstanceEntry*>::iterator prev = it;
+        ++it;
+        if (prev.value()->m_clientName == clientName)
+            lostClient(prev.key());
+    }
 }
 
 void SensorManager::displayStateChanged(bool displayState)

@@ -237,6 +237,15 @@ public:
     bool removeSession(int sessionId);
 
     /**
+     * Verify if socket connection for a given session has been established.
+     * If there has been no connection, session is considered lost and
+     * lostSession signal is emitted.
+     *
+     * @param sessionId Session ID.
+     */
+    void checkConnectionEstablished(int sessionId);
+
+    /**
      * Get socket file descriptor for given session.
      *
      * @param sessionId Session ID.
@@ -338,6 +347,14 @@ public:
     void setDownsampling(int sessionId, bool value);
 
 Q_SIGNALS:
+    /**
+     * Signal is emitted for new client connection after it sent the
+       session id.
+     *
+     * @param sessionId Session ID.
+     */
+    void connectedSession(int sessionId);
+
     /**
      * Signal is emitted for lost sessions which can happen for example
      * if application using sensorfw crashes.
