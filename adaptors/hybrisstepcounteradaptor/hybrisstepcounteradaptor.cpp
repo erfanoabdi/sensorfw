@@ -26,12 +26,8 @@
 #include "datatypes/utils.h"
 #include "config.h"
 
-#ifndef SENSOR_TYPE_STEP_COUNTER
-#define SENSOR_TYPE_STEP_COUNTER (19)
-/* If hardware/sensors.h does not define SENSOR_TYPE_STEP_COUNTER, assume
- * a) the event structure is missing u64 union too, and b) u64.step_counter
- * would be located at the same address as non-u64 data array. */
-#define NO_SENSORS_EVENT_U64
+#ifndef USE_BINDER
+#include <android-version.h>
 #endif
 
 HybrisStepCounterAdaptor::HybrisStepCounterAdaptor(const QString& id) :
@@ -83,7 +79,10 @@ void HybrisStepCounterAdaptor::processSample(const sensors_event_t& data)
 #ifdef USE_BINDER
     d->value_ = data.u.stepCount;
 #else
-#ifdef NO_SENSORS_EVENT_U64
+#if ANDROID_VERSION_MAJOR == 4 && ANDROID_VERSION_MINOR < 4
+/* In Android versions 4.3 and older hardware/sensors.h does not
+ * contain u64 union and values are located at the same
+ * address as non-u64 data array. */
     uint64_t value = 0;
     memcpy(&value, data.data, sizeof value);
     d->value_ = value;
