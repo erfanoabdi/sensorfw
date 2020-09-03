@@ -1,7 +1,6 @@
 /****************************************************************************
 **
 ** Copyright (C) 2019 Jolla Ltd
-** Contact: matti.lehtimaki@jolla.com
 **
 **
 ** $QT_BEGIN_LICENSE:LGPL$

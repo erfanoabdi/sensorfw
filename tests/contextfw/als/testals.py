@@ -2,11 +2,6 @@
 ##
 ## Copyright (C) 2009-2010 Nokia Corporation
 ##
-## Contact: Jean-Luc Lamadon <jean-luc.lamadon@nokia.com>
-##          Matias Muhonen <ext-matias.muhonen@nokia.com>
-##          Tapio Rantala <ext-tapio.rantala@nokia.com>
-##          Lihan Guo <ext-lihan.4.guo@nokia.com>
-##
 ## This file is part of Sensord.
 ##
 ## Sensord is free software; you can redistribute it and/or modify
