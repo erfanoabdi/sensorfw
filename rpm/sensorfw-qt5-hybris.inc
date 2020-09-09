@@ -1,7 +1,6 @@
 Summary:    Sensor Framework Qt5
-Group:      System/Sensor Framework
 License:    LGPLv2+
-URL:        http://gitorious.org/sensorfw
+URL:        https://git.sailfishos.org/mer-core/sensorfw
 Source0:    %{name}-%{version}.tar.bz2
 # Eventhough this is not really needed we have this here
 # as this is added to packaging dir by tar_git.
@@ -23,7 +22,6 @@ Sensor Framework provides an interface to hardware sensor drivers through logica
 
 %package devel
 Summary:    Sensor framework daemon libraries development headers
-Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 Requires:   qt5-qtcore-devel
 Requires:   qt5-qtdbus-devel
@@ -33,20 +31,17 @@ Requires:   qt5-qtnetwork-devel
 Development headers for sensor framework daemon and libraries.
 
 %prep
-%setup -q -n %{name}-%{version}
+%autosetup -n %{name}-%{version}
 
 %build
 unset LD_AS_NEEDED
 export LD_RUN_PATH=%{_libdir}/sensord-qt5/
-export QT_SELECT=5
 
 %qmake5 CONFIG+=hybris %{qmake_extra_parameters} PC_VERSION=`echo %{version} | sed 's/+.*//'`
 
-make %{?_smp_mflags}
+%make_build
 
 %install
-rm -rf %{buildroot}
-export QT_SELECT=5
 %qmake5_install
 
 %post
@@ -57,6 +52,7 @@ export QT_SELECT=5
 
 %files
 %defattr(-,root,root,-)
+%license COPYING
 %{_libdir}/libhybrissensorfw*.so.*
 %{_libdir}/libhybrissensorfw*.so
 %{_libdir}/sensord-qt5/*.so

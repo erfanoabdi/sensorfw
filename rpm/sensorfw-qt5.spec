@@ -2,9 +2,8 @@ Name:       sensorfw-qt5
 Summary:    Sensor Framework Qt5
 Version:    0.12.0
 Release:    0
-Group:      System/Sensor Framework
 License:    LGPLv2+
-URL:        http://gitorious.org/sensorfw
+URL:        https://git.sailfishos.org/mer-core/sensorfw
 Source0:    %{name}-%{version}.tar.bz2
 Source1:    sensorfwd.service
 Source2:    sensorfw-qt5-hybris.inc
@@ -24,8 +23,7 @@ BuildRequires:  pkgconfig(mlite5)
 BuildRequires:  pkgconfig(libsystemd)
 BuildRequires:  pkgconfig(ssu-sysinfo)
 BuildRequires:  doxygen
-BuildRequires:  systemd
-BuildRequires:  libudev-devel
+BuildRequires:  pkgconfig(libudev)
 Provides:   sensord-qt5
 Obsoletes:   sensorframework
 
@@ -35,7 +33,6 @@ Sensor Framework provides an interface to hardware sensor drivers through logica
 
 %package devel
 Summary:    Sensor framework daemon libraries development headers
-Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 Requires:   qt5-qtcore-devel
 Requires:   qt5-qtdbus-devel
@@ -47,7 +44,6 @@ Development headers for sensor framework daemon and libraries.
 
 %package tests
 Summary:    Unit test cases for sensord
-Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 Requires:   qt5-qttest-devel
 Requires:   testrunner-lite
@@ -61,7 +57,6 @@ Contains unit test cases for CI environment.
 
 %package configs
 Summary:    Sensorfw configuration files
-Group:      System/Libraries
 BuildArch:  noarch
 Requires:   %{name} = %{version}
 Provides:   sensord-configs
@@ -79,7 +74,7 @@ Sensorfw configuration files.
 
 %package doc
 Summary:    API documentation for libsensord
-Group:      Documentation
+BuildArch:  noarch
 Requires:   %{name} = %{version}-%{release}
 Requires:   doxygen
 Obsoletes:  %{name}-docs
@@ -90,7 +85,7 @@ API documentation for libsensord
 
 
 %prep
-%setup -q -n %{name}-%{version}
+%autosetup -n %{name}-%{version}
 
 %build
 # setup proper lib
@@ -98,18 +93,15 @@ sed "s=@LIB@=%{_lib}=g" sensord-qt5.pc.in > sensord-qt5.pc
 sed "s=@LIBDIR@=%{_libdir}=g" tests/tests.xml.in > tests/tests.xml
 unset LD_AS_NEEDED
 export LD_RUN_PATH=%{_libdir}/sensord-qt5/
-export QT_SELECT=5
 
 %qmake5  \
     CONFIG+=ssusysinfo\
     CONFIG+=mce\
     PC_VERSION=`echo %{version} | sed 's/+.*//'`
 
-make %{?_smp_mflags}
+%make_build
 
 %install
-rm -rf %{buildroot}
-export QT_SELECT=5
 %qmake5_install
 
 install -D -m644 %{SOURCE1} $RPM_BUILD_ROOT/%{_unitdir}/sensorfwd.service
@@ -137,6 +129,7 @@ systemctl daemon-reload || :
 
 %files
 %defattr(-,root,root,-)
+%license COPYING
 %{_libdir}/libsensorclient-qt5.so.*
 %{_libdir}/libsensordatatypes-qt5.so.*
 %attr(755,root,root)%{_sbindir}/sensorfwd
