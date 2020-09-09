@@ -1,3 +1,9 @@
+sensorfw-qt5 (0.12.1) unstable; urgency=medium
+
+[hybrisadaptor] Fix building rotation vector adaptors with old Android versions
+
+ -- Matti Lehtimäki <matti.lehtimaki@jolla.com>  Wed, 09 Sep 2020 16:14:31 +0300
+
 sensorfw-qt5 (0.12.0) unstable; urgency=medium
 
 [hybrisadaptor] Use of hybris rotation vectors for compass
