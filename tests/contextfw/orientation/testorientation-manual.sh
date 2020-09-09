@@ -5,9 +5,6 @@
 ## Test different accelerometer input values manually.
 ## As a result, screen should rotate.
 ##
-## Contact: Matias Muhonen <ext-matias.muhonen@nokia.com>
-## Contact: Tapio Rantala <ext-tapio.rantala@nokia.com>
-##
 
 INPUT_DEV_NUM=`ls /sys/class/input/event?/device/name | xargs grep -i accelerometer | cut -c23`
 INPUT_DEV=/dev/input/event${INPUT_DEV_NUM}

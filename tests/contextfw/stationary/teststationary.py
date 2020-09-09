@@ -2,8 +2,6 @@
 ##
 ## Copyright (C) 2009-2010 Nokia Corporation
 ##
-## Contact: Lihan Guo <ext-lihan.4.guo@nokia.com>
-##
 ## This file is part of Sensord.
 ##
 ## Sensord is free software; you can redistribute it and/or modify

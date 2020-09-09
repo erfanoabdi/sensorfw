@@ -1,10 +1,8 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Jolla Ltd
-** Contact: lorn.potter@jollamobile.com
 **
 ** Copyright (C) 2016 kimmoli
-** Contact: kimmo.lindholm@eke.fi
 **
 **
 ** $QT_BEGIN_LICENSE:LGPL$

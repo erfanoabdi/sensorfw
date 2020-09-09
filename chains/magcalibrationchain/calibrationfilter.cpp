@@ -1,7 +1,6 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013-2015 Jolla Ltd
-** Contact: lorn.potter@jollamobile.com
 
    This file is part of Sensord.
 
