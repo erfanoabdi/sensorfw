@@ -61,7 +61,7 @@ Description: API documentation for libsensorfw
 Package: sensorfw-qt5-tests
 Section: tests
 Architecture: any
-Depends: libqt5test5, sensorfw-qt5 (= ${binary:Version}), sysklogd, python2, ${shlibs:Depends}
+Depends: libqt5test5, sensorfw-qt5 (= ${binary:Version}), rsyslog, python2, ${shlibs:Depends}
 Description: Unit test cases for sensorfw
 
 Package: libsensorfw-qt5-hybris
