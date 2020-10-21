@@ -2,12 +2,13 @@
 Description=Sensor daemon for sensor framework
 After=dbus.socket
 After=oneshot-root.service
+After=lxc@android.service
 Requires=dbus.service
 Conflicts=actdead.target
 
 [Service]
 Type=notify
-ExecStart=/usr/sbin/sensorfwd -c=/etc/sensorfw/primaryuse.conf --systemd --log-level=warning --no-magnetometer-bg-calibration
+ExecStart=/usr/sbin/sensorfwd -c=/etc/device-info/sensorfw/hybris.conf --systemd --log-level=warning --no-magnetometer-bg-calibration
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=1
@@ -19,4 +20,3 @@ ProtectSystem=full
 
 [Install]
 WantedBy=graphical.target
-
