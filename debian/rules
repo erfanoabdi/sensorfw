@@ -107,7 +107,9 @@ binary-arch: build install
 	dh_builddeb
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+
+build-arch: binary-arch
+.PHONY: build clean binary-indep binary-arch binary build-arch install configure
 
 
 # End of File
